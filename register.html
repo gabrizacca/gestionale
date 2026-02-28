@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrazione</title>
+    <link rel="stylesheet" href="login.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <div class="main-box">
+            <div class="header">
+                <i class="fas fa-user-circle"></i>
+                <h1>Benvenuto!</h1>
+                <p>Crea il tuo account</p>
+            </div>
+
+            <!-- FORM DI REGISTRAZIONE -->
+            <div class="form-section" id="registerSection">
+                <h2><i class="fas fa-user-plus"></i> Registrati</h2>
+                <form action="register.php" method="POST" onsubmit="return validatePasswords()">
+                    <div class="input-group">
+                        <label for="register-name">
+                            <i class="fas fa-user"></i>
+                            <span>Nome Completo</span>
+                        </label>
+                        <input type="text" id="register-name" name="fullname" placeholder="Inserisci nome completo" required>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="register-username">
+                            <i class="fas fa-at"></i>
+                            <span>Username</span>
+                        </label>
+                        <input type="text" id="register-username" name="username" placeholder="Scegli username" required>
+                        <small class="hint">Minimo 3 caratteri, solo lettere e numeri</small>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="register-email">
+                            <i class="fas fa-envelope"></i>
+                            <span>Email</span>
+                        </label>
+                        <input type="email" id="register-email" name="email" placeholder="Inserisci email" required>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="register-password">
+                            <i class="fas fa-lock"></i>
+                            <span>Password</span>
+                        </label>
+                        <div class="password-wrapper">
+                            <input type="password" id="register-password" name="password" placeholder="Crea password" required onkeyup="checkPasswordStrength()">
+                            <i class="fas fa-eye toggle-password" onclick="togglePassword('register-password')"></i>
+                        </div>
+                        <div class="password-strength">
+                            <div class="strength-bar" id="strengthBar"></div>
+                        </div>
+                        <small class="hint" id="strengthText">Inserisci una password</small>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="register-confirm">
+                            <i class="fas fa-lock"></i>
+                            <span>Conferma Password</span>
+                        </label>
+                        <div class="password-wrapper">
+                            <input type="password" id="register-confirm" name="confirm_password" placeholder="Conferma password" required>
+                            <i class="fas fa-eye toggle-password" onclick="togglePassword('register-confirm')"></i>
+                        </div>
+                    </div>
+
+                    <div class="terms">
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="terms" required>
+                            <span>Accetto i <a href="#">Termini e Condizioni</a></span>
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-user-plus"></i>
+                        Registrati
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Funzione per mostrare/nascondere password
+        function togglePassword(fieldId) {
+            const field = document.getElementById(fieldId);
+            const icon = field.nextElementSibling;
+            
+            if (field.type === 'password') {
+                field.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                field.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        // Validazione password
+        function validatePasswords() {
+            const password = document.getElementById('register-password').value;
+            const confirm = document.getElementById('register-confirm').value;
+            
+            if (password !== confirm) {
+                alert('Le password non coincidono!');
+                return false;
+            }
+            
+            if (password.length < 8) {
+                alert('La password deve essere di almeno 8 caratteri!');
+                return false;
+            }
+            
+            return true;
+        }
+
+        // Controllo forza password
+        function checkPasswordStrength() {
+            const password = document.getElementById('register-password').value;
+            const strengthBar = document.getElementById('strengthBar');
+            const strengthText = document.getElementById('strengthText');
+            
+            let strength = 0;
+            
+            if (password.length >= 8) strength++;
+            if (password.match(/[a-z]+/)) strength++;
+            if (password.match(/[A-Z]+/)) strength++;
+            if (password.match(/[0-9]+/)) strength++;
+            if (password.match(/[$@#&!]+/)) strength++;
+            
+            switch(strength) {
+                case 0:
+                case 1:
+                    strengthBar.className = 'strength-bar weak';
+                    strengthText.innerHTML = 'Password debole';
+                    break;
+                case 2:
+                case 3:
+                    strengthBar.className = 'strength-bar medium';
+                    strengthText.innerHTML = 'Password media';
+                    break;
+                case 4:
+                case 5:
+                    strengthBar.className = 'strength-bar strong';
+                    strengthText.innerHTML = 'Password forte';
+                    break;
+            }
+        }
+    </script>
+</body>
+</html>
