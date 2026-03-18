@@ -1,4 +1,6 @@
 <?php
+session_start();
+
 $host = "localhost";
 $db   = "Gestionale";
 $user = "root";
@@ -27,21 +29,19 @@ if (!empty($_POST['username']) && !empty($_POST['password'])) {
     $passwordHash  = hash('sha256', $passwordInput);
 
     // SQL corretta con segnaposti e i due punti mancanti nel tuo codice
-    $sql = "SELECT id_dipendente FROM dipendenti WHERE username = :username AND pswd = :pswd";
+    $sql = "SELECT id_dipendente FROM dipendenti WHERE username = ? AND pswd = ?";
     $stmt = $pdo->prepare($sql);
+    $stmt->bind_param("ss", $usernameInput, $passwordHash);
 
     // Esecuzione sicura (Prepared Statement)
-    $stmt->execute([
-        'username' => $usernameInput,
-        'pswd'     => $passwordHash // Nota: qui la virgola è necessaria tra gli elementi dell'array
-    ]);
+    $stmt->execute();
 
     // Recupero il risultato
     $user = $stmt->fetch();
 
     if ($user) {
-        echo "Login effettuato! ID Dipendente: " . $user['id_dipendente'];
-        // Qui puoi avviare la sessione: session_start(); $_SESSION['id'] = $user['id_dipendente'];
+        header( "Location .\Gestionale_frontend.html" );
+        exit;
     } else {
         echo "Credenziali errate.";
     }
