@@ -1,8 +1,12 @@
 <?php
 require_once 'login.php';
+session_set_cookie_params(0, "/");
 session_start();
 
-if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
+if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
+    // L'utente è autenticato, mostra la dashboard
+} else {
+    // L'utente non è autenticato, reindirizza al login
     header("Location: index.html");
     exit;
 }
@@ -690,6 +694,7 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                     if(confirm('Sei sicuro di voler uscire?')) {
                         alert('Logout effettuato con successo!');
                         // Qui puoi aggiungere la reindirizzazione alla pagina di login
+                        window.location.href = 'logout.php';
                     }
                 }
                 
