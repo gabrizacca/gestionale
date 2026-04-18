@@ -12,43 +12,33 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
 }
 ?>
 
-
 <!DOCTYPE html>
 <html lang="it">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestionale Aziendale</title>
-    <link rel="stylesheet" href="../stile.css">
+    <link rel="stylesheet" href="stile.css">
     
 </head>
 <body>
-    <div class="container"><!DOCTYPE html>
-        <html lang="it">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Gestionale Aziendale</title>
-            <link rel="stylesheet" href="stile.css">
-        </head>
-        <body>
-            <div class="container">
-                <!-- Header -->
-                <header class="header">
-                    <div class="logo">
-                        <h1>Gestionale Aziendale</h1>
-                    </div>
-                    <div class="user-info">
-                        <span>Benvenuto, Amministratore</span>
-                        <button class="btn-logout" onclick="logout()">Logout</button>
-                    </div>
-                </header>
-        
-                <!-- Dashboard Section -->
-                <section class="dashboard-section">
-                    <!-- Menu di navigazione -->
-                    <nav class="sidebar">
-                        <ul class="nav-menu">
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <h1>Gestionale Aziendale</h1>
+            </div>
+            <div class="user-info">
+                <span>Benvenuto, Amministratore</span>
+                <button class="btn-logout" onclick="logout()">Logout</button>
+            </div>
+        </header>
+
+        <!-- Dashboard Section -->
+        <section class="dashboard-section">
+            <!-- Menu di navigazione -->
+            <nav class="sidebar">
+                <ul class="nav-menu">
                             <li class="nav-item active" data-section="dashboard">
                                 <a href="#" onclick="showSection('dashboard')">Dashboard</a>
                             </li>
@@ -69,6 +59,9 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                             </li>
                             <li class="nav-item" data-section="spedizioni">
                                 <a href="#" onclick="showSection('spedizioni')">Spedizioni</a>
+                            </li>
+                            <li class="nav-item" data-section="dipendenti">
+                                <a href="#" onclick="showSection('dipendenti')">Dipendenti</a>
                             </li>
                         </ul>
                     </nav>
@@ -93,6 +86,18 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                                 <div class="stat-card">
                                     <h3>Magazzini</h3>
                                     <p class="stat-number" id="totalMagazzini">0</p>
+                                </div>
+                                <div class="stat-card">
+                                    <h3>Filiali</h3>
+                                    <p class="stat-number" id="totalFiliali">0</p>
+                                </div>
+                                <div class="stat-card">
+                                    <h3>Spedizioni in Corso</h3>
+                                    <p class="stat-number" id="totalSpedizioni">0</p>
+                                </div>
+                                <div class="stat-card">
+                                    <h3>Dipendenti</h3>
+                                    <p class="stat-number" id="totalDipendenti">0</p>
                                 </div>
                             </div>
                             
@@ -268,11 +273,48 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                             </div>
                             <div id="spedizioniForm" class="form-container" style="display: none;"></div>
                         </div>
+
+                        <!-- Dipendenti -->
+                        <div id="dipendentiContent" class="content-section">
+                            <div class="section-header">
+                                <h2>Dipendenti</h2>
+                                <button class="btn-primary" onclick="addEmployee()">Nuovo Dipendente</button>
+                            </div>
+                            
+                            <div class="spedizioni-list">
+                                <h3>Lista Dipendenti</h3>
+                                <div class="table-responsive">
+                                    <table class="data-table">
+                                        <thead>
+                                            <tr>
+                                                <th>ID Dipendente</th>
+                                                <th>Nome</th>
+                                                <th>Cognome</th>
+                                                <th>Posizione</th>
+                                                <th>Magazzino</th>
+                                                <th>Azioni</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="dipendentiTable">
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div id="dipendentiPagination" class="pagination" style="display: none;">
+                                    <button class="btn-pagination" onclick="changePage('dipendenti', 'prev')">Precedente</button>
+                                    <span id="dipendentiPageInfo"></span>
+                                    <button class="btn-pagination" onclick="changePage('dipendenti', 'next')">Successivo</button>
+                                </div>
+                            </div>
+                            <div id="dipendentiForm" class="form-container" style="display: none;"></div>
+                        </div>
                     </main>
                 </section>
-            </div>
-        
+            </div>  
             <script>
+                // Variabili per la paginazione
+                let dipendentiData = [];
+                let dipendentiCurrentPage = 1;
+                const dipendentiPerPage = 10;
                 // Funzione per cambiare sezione
                 function showSection(section) {
                     document.querySelectorAll('.content-section').forEach(el => el.classList.remove('active'));
@@ -291,7 +333,13 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                         .then(response => response.json())
                         .then(data => {
                             if(data.success) {
-                                updateTable(section, data.data);
+                                if(section === 'dipendenti') {
+                                    dipendentiData = data.data;
+                                    dipendentiCurrentPage = 1;
+                                    updateDipendentiTable();
+                                } else {
+                                    updateTable(section, data.data);
+                                }
                             }
                         })
                         .catch(error => console.error('Errore:', error));
@@ -409,6 +457,57 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                     }
                 }
                 
+                // Funzione per aggiornare la tabella dipendenti con paginazione
+                function updateDipendentiTable() {
+                    const tableBody = document.getElementById('dipendentiTable');
+                    const pagination = document.getElementById('dipendentiPagination');
+                    const pageInfo = document.getElementById('dipendentiPageInfo');
+                    
+                    tableBody.innerHTML = '';
+                    
+                    const start = (dipendentiCurrentPage - 1) * dipendentiPerPage;
+                    const end = start + dipendentiPerPage;
+                    const pageData = dipendentiData.slice(start, end);
+                    
+                    pageData.forEach(item => {
+                        tableBody.innerHTML += `
+                            <tr>
+                                <td>${item.id_dipendente}</td>
+                                <td>${item.nome}</td>
+                                <td>${item.cognome}</td>
+                                <td>${item.posizione}</td>
+                                <td>${item.magazzino}</td>
+                                <td>
+                                    <button class="btn-icon edit" onclick="editItem('dipendenti', ${item.id_dipendente})">✏️</button>
+                                    <button class="btn-icon delete" onclick="deleteItem('dipendenti', ${item.id_dipendente})">🗑️</button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    
+                    const totalPages = Math.ceil(dipendentiData.length / dipendentiPerPage);
+                    pageInfo.textContent = `Pagina ${dipendentiCurrentPage} di ${totalPages}`;
+                    
+                    if(totalPages > 1) {
+                        pagination.style.display = 'flex';
+                    } else {
+                        pagination.style.display = 'none';
+                    }
+                }
+                
+                // Funzione per cambiare pagina
+                function changePage(section, direction) {
+                    if(section === 'dipendenti') {
+                        const totalPages = Math.ceil(dipendentiData.length / dipendentiPerPage);
+                        if(direction === 'next' && dipendentiCurrentPage < totalPages) {
+                            dipendentiCurrentPage++;
+                        } else if(direction === 'prev' && dipendentiCurrentPage > 1) {
+                            dipendentiCurrentPage--;
+                        }
+                        updateDipendentiTable();
+                    }
+                }
+                
                 // Funzione per mostrare il form di aggiunta/modifica
                 function showForm(section, id = null) {
                     const formContainer = document.getElementById(`${section}Form`);
@@ -428,6 +527,10 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                     }
                     
                     formContainer.style.display = 'block';
+                }
+
+                function addEmployee() {
+                    location.href = 'signup.html';
                 }
                 
                 // Funzione per renderizzare il form
@@ -705,412 +808,3 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
             </script>
         </body>
         </html>
-        <!-- Header -->
-        <header class="header">
-            <div class="logo">
-                <h1>Gestionale Aziendale</h1>
-            </div>
-            <div class="user-info">
-                <span>Benvenuto, Amministratore</span>
-                <button class="btn-logout">Logout</button>
-            </div>
-        </header>
-
-        <!-- Dashboard Section -->
-        <section class="dashboard-section">
-            <!-- Menu di navigazione -->
-            <nav class="sidebar">
-                <ul class="nav-menu">
-                    <li class="nav-item active" data-section="dashboard">
-                        <a href="#">Dashboard</a>
-                    </li>
-                    <li class="nav-item" data-section="ordini">
-                        <a href="#">Ordini</a>
-                    </li>
-                    <li class="nav-item" data-section="prodotti">
-                        <a href="#">Prodotti</a>
-                    </li>
-                    <li class="nav-item" data-section="clienti">
-                        <a href="#">Clienti</a>
-                    </li>
-                    <li class="nav-item" data-section="magazzini">
-                        <a href="#">Magazzini</a>
-                    </li>
-                    <li class="nav-item" data-section="filiali">
-                        <a href="#">Filiali</a>
-                    </li>
-                    <li class="nav-item" data-section="spedizioni">
-                        <a href="#">Spedizioni</a>
-                    </li>
-                </ul>
-            </nav>
-
-            <!-- Contenuto principale -->
-            <main class="content">
-                <!-- Dashboard -->
-                <div id="dashboardContent" class="content-section active">
-                    <h2>Dashboard</h2>
-                    <div class="stats-cards">
-                        <div class="stat-card">
-                            <h3>Ordini Totali</h3>
-                            <p class="stat-number">158</p>
-                        </div>
-                        <div class="stat-card">
-                            <h3>Prodotti</h3>
-                            <p class="stat-number">45</p>
-                        </div>
-                        <div class="stat-card">
-                            <h3>Clienti</h3>
-                            <p class="stat-number">23</p>
-                        </div>
-                        <div class="stat-card">
-                            <h3>Magazzini</h3>
-                            <p class="stat-number">3</p>
-                        </div>
-                    </div>
-                    
-                    <div class="recent-orders">
-                        <h3>Ordini Recenti</h3>
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>ID Ordine</th>
-                                    <th>Cliente</th>
-                                    <th>Data</th>
-                                    <th>Stato</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>#101</td>
-                                    <td>Rossi SRL</td>
-                                    <td>2024-03-15</td>
-                                    <td><span class="badge success">Completato</span></td>
-                                </tr>
-                                <tr>
-                                    <td>#102</td>
-                                    <td>Bianchi SpA</td>
-                                    <td>2024-03-14</td>
-                                    <td><span class="badge warning">In lavorazione</span></td>
-                                </tr>
-                                <tr>
-                                    <td>#103</td>
-                                    <td>Verdi & C.</td>
-                                    <td>2024-03-13</td>
-                                    <td><span class="badge success">Completato</span></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Ordini -->
-                <div id="ordiniContent" class="content-section">
-                    <div class="section-header">
-                        <h2>Gestione Ordini</h2>
-                        <button class="btn-primary">Nuovo Ordine</button>
-                    </div>
-                    <div class="table-responsive">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>ID Ordine</th>
-                                    <th>Cliente</th>
-                                    <th>Data Ordine</th>
-                                    <th>Data Arrivo</th>
-                                    <th>Dipendente</th>
-                                    <th>Prodotti</th>
-                                    <th>Azioni</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>101</td>
-                                    <td>Rossi SRL</td>
-                                    <td>2024-03-15</td>
-                                    <td>2024-03-20</td>
-                                    <td>Mario Rossi</td>
-                                    <td>3</td>
-                                    <td>
-                                        <button class="btn-icon view">👁️</button>
-                                        <button class="btn-icon edit">✏️</button>
-                                        <button class="btn-icon delete">🗑️</button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>102</td>
-                                    <td>Bianchi SpA</td>
-                                    <td>2024-03-14</td>
-                                    <td>-</td>
-                                    <td>Laura Bianchi</td>
-                                    <td>5</td>
-                                    <td>
-                                        <button class="btn-icon view">👁️</button>
-                                        <button class="btn-icon edit">✏️</button>
-                                        <button class="btn-icon delete">🗑️</button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>103</td>
-                                    <td>Verdi & C.</td>
-                                    <td>2024-03-13</td>
-                                    <td>2024-03-18</td>
-                                    <td>Giuseppe Verdi</td>
-                                    <td>2</td>
-                                    <td>
-                                        <button class="btn-icon view">👁️</button>
-                                        <button class="btn-icon edit">✏️</button>
-                                        <button class="btn-icon delete">🗑️</button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Prodotti -->
-                <div id="prodottiContent" class="content-section">
-                    <div class="section-header">
-                        <h2>Gestione Prodotti</h2>
-                        <button class="btn-primary">Nuovo Prodotto</button>
-                    </div>
-                    <div class="table-responsive">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Descrizione</th>
-                                    <th>Magazzino</th>
-                                    <th>Quantità</th>
-                                    <th>Azioni</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>1</td>
-                                    <td>Prodotto A</td>
-                                    <td>Magazzino Centrale</td>
-                                    <td>150</td>
-                                    <td>
-                                        <button class="btn-icon edit">✏️</button>
-                                        <button class="btn-icon delete">🗑️</button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>2</td>
-                                    <td>Prodotto B</td>
-                                    <td>Magazzino Nord</td>
-                                    <td>80</td>
-                                    <td>
-                                        <button class="btn-icon edit">✏️</button>
-                                        <button class="btn-icon delete">🗑️</button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>3</td>
-                                    <td>Prodotto C</td>
-                                    <td>Magazzino Sud</td>
-                                    <td>200</td>
-                                    <td>
-                                        <button class="btn-icon edit">✏️</button>
-                                        <button class="btn-icon delete">🗑️</button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Clienti -->
-                <div id="clientiContent" class="content-section">
-                    <div class="section-header">
-                        <h2>Gestione Clienti</h2>
-                        <button class="btn-primary">Nuovo Cliente</button>
-                    </div>
-                    <div class="table-responsive">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Nome Azienda</th>
-                                    <th>Indirizzo</th>
-                                    <th>P.IVA</th>
-                                    <th>Email</th>
-                                    <th>Azioni</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>1</td>
-                                    <td>Rossi SRL</td>
-                                    <td>Via Roma 1, Milano</td>
-                                    <td>12345678901</td>
-                                    <td>info@rossi.it</td>
-                                    <td>
-                                        <button class="btn-icon edit">✏️</button>
-                                        <button class="btn-icon delete">🗑️</button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>2</td>
-                                    <td>Bianchi SpA</td>
-                                    <td>Via Milano 10, Torino</td>
-                                    <td>98765432109</td>
-                                    <td>info@bianchi.it</td>
-                                    <td>
-                                        <button class="btn-icon edit">✏️</button>
-                                        <button class="btn-icon delete">🗑️</button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>3</td>
-                                    <td>Verdi & C.</td>
-                                    <td>Piazza Dante 5, Bologna</td>
-                                    <td>45678901234</td>
-                                    <td>info@verdi.it</td>
-                                    <td>
-                                        <button class="btn-icon edit">✏️</button>
-                                        <button class="btn-icon delete">🗑️</button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Magazzini -->
-                <div id="magazziniContent" class="content-section">
-                    <h2>Gestione Magazzini</h2>
-                    <div class="table-responsive">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Indirizzo</th>
-                                    <th>Descrizione</th>
-                                    <th>Numero Prodotti</th>
-                                    <th>Azioni</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>1</td>
-                                    <td>Via Industria 5, Milano</td>
-                                    <td>Magazzino Centrale</td>
-                                    <td>45</td>
-                                    <td><button class="btn-icon view">👁️</button></td>
-                                </tr>
-                                <tr>
-                                    <td>2</td>
-                                    <td>Via Roma 23, Torino</td>
-                                    <td>Magazzino Nord</td>
-                                    <td>30</td>
-                                    <td><button class="btn-icon view">👁️</button></td>
-                                </tr>
-                                <tr>
-                                    <td>3</td>
-                                    <td>Via Napoli 15, Roma</td>
-                                    <td>Magazzino Sud</td>
-                                    <td>28</td>
-                                    <td><button class="btn-icon view">👁️</button></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Filiali -->
-                <div id="filialiContent" class="content-section">
-                    <h2>Gestione Filiali</h2>
-                    <div class="table-responsive">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Indirizzo</th>
-                                    <th>Tipo</th>
-                                    <th>Recapito</th>
-                                    <th>Magazzino Collegato</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>1</td>
-                                    <td>Via Garibaldi 10, Milano</td>
-                                    <td>Vendita</td>
-                                    <td>02 1234567</td>
-                                    <td>Magazzino Centrale</td>
-                                </tr>
-                                <tr>
-                                    <td>2</td>
-                                    <td>Corso Italia 5, Torino</td>
-                                    <td>Vendita</td>
-                                    <td>011 7654321</td>
-                                    <td>Magazzino Nord</td>
-                                </tr>
-                                <tr>
-                                    <td>3</td>
-                                    <td>Via Veneto 20, Roma</td>
-                                    <td>Logistica</td>
-                                    <td>06 9876543</td>
-                                    <td>Magazzino Sud</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Spedizioni -->
-                <div id="spedizioniContent" class="content-section">
-                    <div class="section-header">
-                        <h2>Spedizioni Magazzino → Filiale</h2>
-                        <button class="btn-primary">Nuova Spedizione</button>
-                    </div>
-                    
-                    <div class="spedizioni-list">
-                        <h3>Spedizioni in corso</h3>
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>ID Spedizione</th>
-                                    <th>Data</th>
-                                    <th>Magazzino Origine</th>
-                                    <th>Filiale Destinazione</th>
-                                    <th>Prodotti</th>
-                                    <th>Stato</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>S001</td>
-                                    <td>2024-03-15</td>
-                                    <td>Magazzino Centrale</td>
-                                    <td>Filiale Milano</td>
-                                    <td>3</td>
-                                    <td><span class="badge warning">In transito</span></td>
-                                </tr>
-                                <tr>
-                                    <td>S002</td>
-                                    <td>2024-03-14</td>
-                                    <td>Magazzino Nord</td>
-                                    <td>Filiale Torino</td>
-                                    <td>5</td>
-                                    <td><span class="badge success">Consegnato</span></td>
-                                </tr>
-                                <tr>
-                                    <td>S003</td>
-                                    <td>2024-03-13</td>
-                                    <td>Magazzino Sud</td>
-                                    <td>Filiale Roma</td>
-                                    <td>2</td>
-                                    <td><span class="badge success">Consegnato</span></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </main>
-        </section>
-    </div>
-</body>
-</html>
