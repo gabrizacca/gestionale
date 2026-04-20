@@ -3,6 +3,10 @@ require_once 'login.php';
 session_set_cookie_params(0, "/");
 session_start();
 
+$message = isset($_SESSION['message']) ? $_SESSION['message'] : '';
+$message_type = isset($_SESSION['message_type']) ? $_SESSION['message_type'] : '';
+unset($_SESSION['message'], $_SESSION['message_type']);
+
 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
     // L'utente è autenticato, mostra la dashboard
 } else {
@@ -19,9 +23,25 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestionale Aziendale</title>
     <link rel="stylesheet" href="stile.css">
+    <style>
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            color: white;
+            font-weight: bold;
+            z-index: 1000;
+            display: none;
+        }
+        .notification.success { background-color: #4CAF50; }
+        .notification.error { background-color: #f44336; }
+    </style>
     
 </head>
 <body>
+    <div id="notification" class="notification <?php echo $message_type; ?>"><?php echo htmlspecialchars($message); ?></div>
     <div class="container">
         <!-- Header -->
         <header class="header">
@@ -29,7 +49,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                 <h1>Gestionale Aziendale</h1>
             </div>
             <div class="user-info">
-                <span>Benvenuto, Amministratore</span>
+                <span>Benvenuto, <?php echo htmlspecialchars($_SESSION['nome'] . ' ' . $_SESSION['cognome']); ?><?php if (isset($_SESSION['is_admin']) && $_SESSION['is_admin'] == 1) echo ' 👑'; ?></span>
                 <button class="btn-logout" onclick="logout()">Logout</button>
             </div>
         </header>
@@ -48,6 +68,10 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                             <li class="nav-item" data-section="prodotti">
                                 <a href="#" onclick="showSection('prodotti')">Prodotti</a>
                             </li>
+                            <li class="nav-item" data-section="spedizioni">
+                                <a href="#" onclick="showSection('spedizioni')">Spedizioni</a>
+                            </li>
+                            <?php if (isset($_SESSION['is_admin']) && $_SESSION['is_admin'] == 1): ?> 
                             <li class="nav-item" data-section="clienti">
                                 <a href="#" onclick="showSection('clienti')">Clienti</a>
                             </li>
@@ -57,12 +81,10 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                             <li class="nav-item" data-section="filiali">
                                 <a href="#" onclick="showSection('filiali')">Filiali</a>
                             </li>
-                            <li class="nav-item" data-section="spedizioni">
-                                <a href="#" onclick="showSection('spedizioni')">Spedizioni</a>
-                            </li>
                             <li class="nav-item" data-section="dipendenti">
                                 <a href="#" onclick="showSection('dipendenti')">Dipendenti</a>
                             </li>
+                            <?php endif; ?>
                         </ul>
                     </nav>
         
@@ -278,9 +300,9 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                         <div id="dipendentiContent" class="content-section">
                             <div class="section-header">
                                 <h2>Dipendenti</h2>
-                                <button class="btn-primary" onclick="addEmployee()">Nuovo Dipendente</button>
+                                <button class="btn-primary" onclick="add_employee()">Nuovo Dipendente</button>
+                                <a href="delete_user.php" class="btn-secondary">Elimina Utente</a>
                             </div>
-                            
                             <div class="spedizioni-list">
                                 <h3>Lista Dipendenti</h3>
                                 <div class="table-responsive">
@@ -529,8 +551,8 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                     formContainer.style.display = 'block';
                 }
 
-                function addEmployee() {
-                    location.href = 'signup.html';
+                function add_employee() {
+                    location.href = 'SignUP.php';
                 }
                 
                 // Funzione per renderizzare il form
@@ -804,6 +826,13 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                 // Carica i dati iniziali
                 document.addEventListener('DOMContentLoaded', () => {
                     loadData('dashboard');
+                    // Mostra notifica se presente
+                    <?php if ($message): ?>
+                        document.getElementById('notification').style.display = 'block';
+                        setTimeout(() => {
+                            document.getElementById('notification').style.display = 'none';
+                        }, 5000);
+                    <?php endif; ?>
                 });
             </script>
         </body>
