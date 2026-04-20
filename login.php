@@ -20,35 +20,43 @@ try {
 
 $message = '';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $usernameInput = trim($_POST['username'] ?? '');
-    $passwordInput = $_POST['password'] ?? '';
+// Esegui la logica di login solo se questo file è richiamato direttamente.
+// Quando viene incluso da api.php o dashboard.php, serve solo la connessione PDO.
+if (basename($_SERVER['SCRIPT_NAME']) === 'login.php') {
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $usernameInput = trim($_POST['username'] ?? '');
+        $passwordInput = $_POST['password'] ?? '';
 
-    if ($usernameInput === '' || $passwordInput === '') {
-        $message = 'Inserisci username e password.';
-    } else {
-        $passwordHash = hash('sha256', $passwordInput);
+        if ($usernameInput === '' || $passwordInput === '') {
+            $message = 'Inserisci username e password.';
+        } else {
+            $passwordHash = hash('sha256', $passwordInput);
 
-        $sql = "SELECT id_dipendente FROM dipendenti WHERE username = ? AND pswd = ?";
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute([$usernameInput, $passwordHash]);
+            $sql = "SELECT id_dipendente, Nome, Cognome, is_admin FROM dipendenti WHERE username = ? AND pswd = ?";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([$usernameInput, $passwordHash]);
 
-        $user = $stmt->fetch();
+            $user = $stmt->fetch();
 
-        if ($user !== false) {
-            session_set_cookie_params(0, '/');
-            session_start();
-            $_SESSION['loggedin'] = true;
-            $_SESSION['username'] = $usernameInput;
-            header("Location: ./dashboard.php");
-            exit;
+            if ($user !== false) {
+                session_set_cookie_params(0, '/');
+                session_start();
+                $_SESSION['loggedin'] = true;
+                $_SESSION['username'] = $usernameInput;
+                $_SESSION['nome'] = $user['Nome'];
+                $_SESSION['cognome'] = $user['Cognome'];
+                $_SESSION['is_admin'] = $user['is_admin'];
+                $_SESSION['user_id'] = $user['id_dipendente'];
+                header("Location: ./dashboard.php");
+                exit;
+            }
+
+            $message = 'Credenziali errate.';
         }
-
-        $message = 'Credenziali errate.';
     }
-}
 
-if ($message !== '') {
-    echo htmlspecialchars($message, ENT_QUOTES, 'UTF-8');
+    if ($message !== '') {
+        echo htmlspecialchars($message, ENT_QUOTES, 'UTF-8');
+    }
 }
 ?>

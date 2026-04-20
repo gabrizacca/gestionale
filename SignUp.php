@@ -44,7 +44,7 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true || !isset($_
                 <div class="header">
                     <i class="fas fa-user-circle"></i>
                     <h1>Benvenuto!</h1>
-                    <p>Accedi al tuo account o registrati</p>
+                    <p>Registra un nuovo dipendente</p>
                 </div>
 
             <!-- Nuova versione della sezione form con i nuovi campi -->

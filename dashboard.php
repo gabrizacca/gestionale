@@ -68,9 +68,6 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                             <li class="nav-item" data-section="prodotti">
                                 <a href="#" onclick="showSection('prodotti')">Prodotti</a>
                             </li>
-                            <li class="nav-item" data-section="spedizioni">
-                                <a href="#" onclick="showSection('spedizioni')">Spedizioni</a>
-                            </li>
                             <?php if (isset($_SESSION['is_admin']) && $_SESSION['is_admin'] == 1): ?> 
                             <li class="nav-item" data-section="clienti">
                                 <a href="#" onclick="showSection('clienti')">Clienti</a>
@@ -114,10 +111,6 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                                     <p class="stat-number" id="totalFiliali">0</p>
                                 </div>
                                 <div class="stat-card">
-                                    <h3>Spedizioni in Corso</h3>
-                                    <p class="stat-number" id="totalSpedizioni">0</p>
-                                </div>
-                                <div class="stat-card">
                                     <h3>Dipendenti</h3>
                                     <p class="stat-number" id="totalDipendenti">0</p>
                                 </div>
@@ -154,10 +147,10 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                                         <tr>
                                             <th>ID Ordine</th>
                                             <th>Cliente</th>
+                                            <th>Prodotto</th>
                                             <th>Data Ordine</th>
                                             <th>Data Arrivo</th>
                                             <th>Dipendente</th>
-                                            <th>Prodotti</th>
                                             <th>Azioni</th>
                                         </tr>
                                     </thead>
@@ -180,8 +173,6 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                                         <tr>
                                             <th>ID</th>
                                             <th>Descrizione</th>
-                                            <th>Magazzino</th>
-                                            <th>Quantità</th>
                                             <th>Azioni</th>
                                         </tr>
                                     </thead>
@@ -230,7 +221,6 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                                             <th>ID</th>
                                             <th>Indirizzo</th>
                                             <th>Descrizione</th>
-                                            <th>Numero Prodotti</th>
                                             <th>Azioni</th>
                                         </tr>
                                     </thead>
@@ -255,7 +245,6 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                                             <th>Indirizzo</th>
                                             <th>Tipo</th>
                                             <th>Recapito</th>
-                                            <th>Magazzino Collegato</th>
                                             <th>Azioni</th>
                                         </tr>
                                     </thead>
@@ -266,44 +255,13 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                             <div id="filialiForm" class="form-container" style="display: none;"></div>
                         </div>
         
-                        <!-- Spedizioni -->
-                        <div id="spedizioniContent" class="content-section">
-                            <div class="section-header">
-                                <h2>Spedizioni Magazzino → Filiale</h2>
-                                <button class="btn-primary" onclick="showForm('spedizioni')">Nuova Spedizione</button>
-                            </div>
-                            
-                            <div class="spedizioni-list">
-                                <h3>Spedizioni in corso</h3>
-                                <div class="table-responsive">
-                                    <table class="data-table">
-                                        <thead>
-                                            <tr>
-                                                <th>ID Spedizione</th>
-                                                <th>Data</th>
-                                                <th>Magazzino Origine</th>
-                                                <th>Filiale Destinazione</th>
-                                                <th>Prodotti</th>
-                                                <th>Stato</th>
-                                                <th>Azioni</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="spedizioniTable">
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                            <div id="spedizioniForm" class="form-container" style="display: none;"></div>
-                        </div>
-
                         <!-- Dipendenti -->
                         <div id="dipendentiContent" class="content-section">
                             <div class="section-header">
                                 <h2>Dipendenti</h2>
                                 <button class="btn-primary" onclick="add_employee()">Nuovo Dipendente</button>
-                                <a href="delete_user.php" class="btn-secondary">Elimina Utente</a>
                             </div>
-                            <div class="spedizioni-list">
+                            <div class="section-list">
                                 <h3>Lista Dipendenti</h3>
                                 <div class="table-responsive">
                                     <table class="data-table">
@@ -313,7 +271,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                                                 <th>Nome</th>
                                                 <th>Cognome</th>
                                                 <th>Posizione</th>
-                                                <th>Magazzino</th>
+                                                <th>Filiale</th>
                                                 <th>Azioni</th>
                                             </tr>
                                         </thead>
@@ -380,10 +338,10 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                                 <tr>
                                     <td>${item.id}</td>
                                     <td>${item.cliente}</td>
+                                    <td>${item.prodotto || '-'}</td>
                                     <td>${item.data_ordine}</td>
                                     <td>${item.data_arrivo || '-'}</td>
                                     <td>${item.dipendente}</td>
-                                    <td>${item.prodotti}</td>
                                     <td>
                                         <button class="btn-icon edit" onclick="editItem('ordini', ${item.id})">✏️</button>
                                         <button class="btn-icon delete" onclick="deleteItem('ordini', ${item.id})">🗑️</button>
@@ -397,8 +355,6 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                                 <tr>
                                     <td>${item.id}</td>
                                     <td>${item.descrizione}</td>
-                                    <td>${item.magazzino}</td>
-                                    <td>${item.quantita}</td>
                                     <td>
                                         <button class="btn-icon edit" onclick="editItem('prodotti', ${item.id})">✏️</button>
                                         <button class="btn-icon delete" onclick="deleteItem('prodotti', ${item.id})">🗑️</button>
@@ -429,7 +385,6 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                                     <td>${item.id}</td>
                                     <td>${item.indirizzo}</td>
                                     <td>${item.descrizione}</td>
-                                    <td>${item.numero_prodotti}</td>
                                     <td>
                                         <button class="btn-icon edit" onclick="editItem('magazzini', ${item.id})">✏️</button>
                                         <button class="btn-icon delete" onclick="deleteItem('magazzini', ${item.id})">🗑️</button>
@@ -445,28 +400,9 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                                     <td>${item.indirizzo}</td>
                                     <td>${item.tipo}</td>
                                     <td>${item.recapito}</td>
-                                    <td>${item.magazzino_collegato}</td>
                                     <td>
                                         <button class="btn-icon edit" onclick="editItem('filiali', ${item.id})">✏️</button>
                                         <button class="btn-icon delete" onclick="deleteItem('filiali', ${item.id})">🗑️</button>
-                                    </td>
-                                </tr>
-                            `;
-                        });
-                    } else if(section === 'spedizioni') {
-                        data.forEach(item => {
-                            const badgeClass = item.stato === 'Consegnato' ? 'success' : 'warning';
-                            tableBody.innerHTML += `
-                                <tr>
-                                    <td>${item.id}</td>
-                                    <td>${item.data}</td>
-                                    <td>${item.magazzino_origine}</td>
-                                    <td>${item.filiale_destinazione}</td>
-                                    <td>${item.prodotti}</td>
-                                    <td><span class="badge ${badgeClass}">${item.stato}</span></td>
-                                    <td>
-                                        <button class="btn-icon edit" onclick="editItem('spedizioni', ${item.id})">✏️</button>
-                                        <button class="btn-icon delete" onclick="deleteItem('spedizioni', ${item.id})">🗑️</button>
                                     </td>
                                 </tr>
                             `;
@@ -498,7 +434,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                                 <td>${item.nome}</td>
                                 <td>${item.cognome}</td>
                                 <td>${item.posizione}</td>
-                                <td>${item.magazzino}</td>
+                                <td>${item.filiale}</td>
                                 <td>
                                     <button class="btn-icon edit" onclick="editItem('dipendenti', ${item.id_dipendente})">✏️</button>
                                     <button class="btn-icon delete" onclick="deleteItem('dipendenti', ${item.id_dipendente})">🗑️</button>
@@ -560,50 +496,64 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                     const formContainer = document.getElementById(`${section}Form`);
                     
                     if(section === 'ordini') {
-                        formContainer.innerHTML = `
-                            <h3>${id ? 'Modifica' : 'Nuovo'} Ordine</h3>
-                            <form onsubmit="saveItem(event, '${section}', ${id || 'null'})">
-                                <div class="form-group">
-                                    <label>Cliente</label>
-                                    <input type="text" name="cliente" value="${data ? data.cliente : ''}" required>
-                                </div>
-                                <div class="form-group">
-                                    <label>Data Ordine</label>
-                                    <input type="date" name="data_ordine" value="${data ? data.data_ordine : ''}" required>
-                                </div>
-                                <div class="form-group">
-                                    <label>Data Arrivo</label>
-                                    <input type="date" name="data_arrivo" value="${data ? data.data_arrivo : ''}">
-                                </div>
-                                <div class="form-group">
-                                    <label>Dipendente</label>
-                                    <input type="text" name="dipendente" value="${data ? data.dipendente : ''}" required>
-                                </div>
-                                <div class="form-group">
-                                    <label>Numero Prodotti</label>
-                                    <input type="number" name="prodotti" value="${data ? data.prodotti : ''}" required>
-                                </div>
-                                <div class="form-group">
-                                    <button type="submit" class="btn-success">Salva</button>
-                                    <button type="button" class="btn-cancel" onclick="hideForm('${section}')">Annulla</button>
-                                </div>
-                            </form>
-                        `;
+                        // Carica clienti, dipendenti e prodotti per i select
+                        Promise.all([
+                            fetch('api.php?action=getClienti').then(r => r.json()),
+                            fetch('api.php?action=getDipendenti').then(r => r.json()),
+                            fetch('api.php?action=getProdotti').then(r => r.json())
+                        ]).then(([clientiRes, dipendentiRes, prodottiRes]) => {
+                            if(clientiRes.success && dipendentiRes.success && prodottiRes.success) {
+                                const clientiOptions = clientiRes.data.map(c => `<option value="${c.id}" ${data && data.id_cliente == c.id ? 'selected' : ''}>${c.nome_azienda}</option>`).join('');
+                                const dipendentiOptions = dipendentiRes.data.map(d => `<option value="${d.id}" ${data && data.id_dipendente == d.id ? 'selected' : ''}>${d.nome_completo}</option>`).join('');
+                                const prodottiOptions = prodottiRes.data.map(p => `<option value="${p.id}" ${data && data.id_prodotto == p.id ? 'selected' : ''}>${p.descrizione}</option>`).join('');
+                                
+                                formContainer.innerHTML = `
+                                    <h3>${id ? 'Modifica' : 'Nuovo'} Ordine</h3>
+                                    <form onsubmit="saveItem(event, '${section}', ${id || 'null'})">
+                                        <div class="form-group">
+                                            <label>Cliente</label>
+                                            <select name="ID_Cliente" required>
+                                                <option value="">Seleziona Cliente</option>
+                                                ${clientiOptions}
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Prodotto</label>
+                                            <select name="ID_prodotto" required>
+                                                <option value="">Seleziona Prodotto</option>
+                                                ${prodottiOptions}
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Data Ordine</label>
+                                            <input type="date" name="Data_Ordine" value="${data ? data.data_ordine : ''}" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Data Arrivo</label>
+                                            <input type="date" name="Data_Arrivo" value="${data ? data.data_arrivo : ''}">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Dipendente</label>
+                                            <select name="ID_Dipendente" required>
+                                                <option value="">Seleziona Dipendente</option>
+                                                ${dipendentiOptions}
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <button type="submit" class="btn-success">Salva</button>
+                                            <button type="button" class="btn-cancel" onclick="hideForm('${section}')">Annulla</button>
+                                        </div>
+                                    </form>
+                                `;
+                            }
+                        });
                     } else if(section === 'prodotti') {
                         formContainer.innerHTML = `
                             <h3>${id ? 'Modifica' : 'Nuovo'} Prodotto</h3>
                             <form onsubmit="saveItem(event, '${section}', ${id || 'null'})">
                                 <div class="form-group">
                                     <label>Descrizione</label>
-                                    <input type="text" name="descrizione" value="${data ? data.descrizione : ''}" required>
-                                </div>
-                                <div class="form-group">
-                                    <label>Magazzino</label>
-                                    <input type="text" name="magazzino" value="${data ? data.magazzino : ''}" required>
-                                </div>
-                                <div class="form-group">
-                                    <label>Quantità</label>
-                                    <input type="number" name="quantita" value="${data ? data.quantita : ''}" required>
+                                    <input type="text" name="Desc_prodotto" value="${data ? data.descrizione : ''}" required>
                                 </div>
                                 <div class="form-group">
                                     <button type="submit" class="btn-success">Salva</button>
@@ -617,19 +567,19 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                             <form onsubmit="saveItem(event, '${section}', ${id || 'null'})">
                                 <div class="form-group">
                                     <label>Nome Azienda</label>
-                                    <input type="text" name="nome_azienda" value="${data ? data.nome_azienda : ''}" required>
+                                    <input type="text" name="Nome_Azienda" value="${data ? data.nome_azienda : ''}" required>
                                 </div>
                                 <div class="form-group">
                                     <label>Indirizzo</label>
-                                    <input type="text" name="indirizzo" value="${data ? data.indirizzo : ''}" required>
+                                    <input type="text" name="Indirizzo" value="${data ? data.indirizzo : ''}" required>
                                 </div>
                                 <div class="form-group">
                                     <label>Partita IVA</label>
-                                    <input type="text" name="p_iva" value="${data ? data.p_iva : ''}" required>
+                                    <input type="text" name="P_IVA" value="${data ? data.p_iva : ''}" required>
                                 </div>
                                 <div class="form-group">
                                     <label>Email</label>
-                                    <input type="email" name="email" value="${data ? data.email : ''}" required>
+                                    <input type="email" name="Email" value="${data ? data.email : ''}" required>
                                 </div>
                                 <div class="form-group">
                                     <button type="submit" class="btn-success">Salva</button>
@@ -643,15 +593,11 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                             <form onsubmit="saveItem(event, '${section}', ${id || 'null'})">
                                 <div class="form-group">
                                     <label>Indirizzo</label>
-                                    <input type="text" name="indirizzo" value="${data ? data.indirizzo : ''}" required>
+                                    <input type="text" name="Indirizzo" value="${data ? data.indirizzo : ''}" required>
                                 </div>
                                 <div class="form-group">
                                     <label>Descrizione</label>
-                                    <input type="text" name="descrizione" value="${data ? data.descrizione : ''}" required>
-                                </div>
-                                <div class="form-group">
-                                    <label>Numero Prodotti</label>
-                                    <input type="number" name="numero_prodotti" value="${data ? data.numero_prodotti : ''}" required>
+                                    <input type="text" name="Desc_Magazzino" value="${data ? data.descrizione : ''}" required>
                                 </div>
                                 <div class="form-group">
                                     <button type="submit" class="btn-success">Salva</button>
@@ -665,59 +611,91 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                             <form onsubmit="saveItem(event, '${section}', ${id || 'null'})">
                                 <div class="form-group">
                                     <label>Indirizzo</label>
-                                    <input type="text" name="indirizzo" value="${data ? data.indirizzo : ''}" required>
+                                    <input type="text" name="Indirizzo" value="${data ? data.indirizzo : ''}" required>
                                 </div>
                                 <div class="form-group">
                                     <label>Tipo</label>
-                                    <input type="text" name="tipo" value="${data ? data.tipo : ''}" required>
-                                </div>
-                                <div class="form-group">
-                                    <label>Recapito</label>
-                                    <input type="text" name="recapito" value="${data ? data.recapito : ''}" required>
-                                </div>
-                                <div class="form-group">
-                                    <label>Magazzino Collegato</label>
-                                    <input type="text" name="magazzino_collegato" value="${data ? data.magazzino_collegato : ''}" required>
-                                </div>
-                                <div class="form-group">
-                                    <button type="submit" class="btn-success">Salva</button>
-                                    <button type="button" class="btn-cancel" onclick="hideForm('${section}')">Annulla</button>
-                                </div>
-                            </form>
-                        `;
-                    } else if(section === 'spedizioni') {
-                        formContainer.innerHTML = `
-                            <h3>${id ? 'Modifica' : 'Nuova'} Spedizione</h3>
-                            <form onsubmit="saveItem(event, '${section}', ${id || 'null'})">
-                                <div class="form-group">
-                                    <label>Data</label>
-                                    <input type="date" name="data" value="${data ? data.data : ''}" required>
-                                </div>
-                                <div class="form-group">
-                                    <label>Magazzino Origine</label>
-                                    <input type="text" name="magazzino_origine" value="${data ? data.magazzino_origine : ''}" required>
-                                </div>
-                                <div class="form-group">
-                                    <label>Filiale Destinazione</label>
-                                    <input type="text" name="filiale_destinazione" value="${data ? data.filiale_destinazione : ''}" required>
-                                </div>
-                                <div class="form-group">
-                                    <label>Numero Prodotti</label>
-                                    <input type="number" name="prodotti" value="${data ? data.prodotti : ''}" required>
-                                </div>
-                                <div class="form-group">
-                                    <label>Stato</label>
-                                    <select name="stato" required>
-                                        <option value="In transito" ${data && data.stato === 'In transito' ? 'selected' : ''}>In transito</option>
-                                        <option value="Consegnato" ${data && data.stato === 'Consegnato' ? 'selected' : ''}>Consegnato</option>
+                                    <select name="Tipo" required>
+                                        <option value="">Seleziona Tipo</option>
+                                        <option value="prod" ${data && data.tipo === 'prod' ? 'selected' : ''}>Produzione</option>
+                                        <option value="vendita" ${data && data.tipo === 'vendita' ? 'selected' : ''}>Vendita</option>
+                                        <option value="misto" ${data && data.tipo === 'misto' ? 'selected' : ''}>Misto</option>
                                     </select>
                                 </div>
                                 <div class="form-group">
+                                    <label>Recapito Telefonico</label>
+                                    <input type="text" name="Recapito_Telefonico" value="${data ? data.recapito : ''}" required>
+                                </div>
+                                <div class="form-group">
                                     <button type="submit" class="btn-success">Salva</button>
                                     <button type="button" class="btn-cancel" onclick="hideForm('${section}')">Annulla</button>
                                 </div>
                             </form>
                         `;
+                    } else if(section === 'dipendenti') {
+                        // Carica filiali per il select
+                        fetch('api.php?action=getFiliali').then(r => r.json()).then(filialiRes => {
+                            if(filialiRes.success) {
+                                const filialiOptions = filialiRes.data.map(f => `<option value="${f.id}" ${data && data.id_filiale == f.id ? 'selected' : ''}>${f.indirizzo}</option>`).join('');
+                                
+                                formContainer.innerHTML = `
+                                    <h3>${id ? 'Modifica' : 'Nuovo'} Dipendente</h3>
+                                    <form onsubmit="saveItem(event, '${section}', ${id || 'null'})">
+                                        <div class="form-group">
+                                            <label>Filiale</label>
+                                            <select name="ID_Filiale" required>
+                                                <option value="">Seleziona Filiale</option>
+                                                ${filialiOptions}
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Username</label>
+                                            <input type="text" name="Username" value="${data ? data.username : ''}" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Password ${id ? '(lascia vuoto per non cambiare)' : ''}</label>
+                                            <input type="password" name="Pswd" ${id ? '' : 'required'}>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Nome</label>
+                                            <input type="text" name="Nome" value="${data ? data.nome : ''}" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Cognome</label>
+                                            <input type="text" name="Cognome" value="${data ? data.cognome : ''}" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Email</label>
+                                            <input type="email" name="Email" value="${data ? data.email : ''}" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Data Assunzione</label>
+                                            <input type="date" name="Data_Assunzione" value="${data ? data.data_assunzione : ''}" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Stipendio</label>
+                                            <input type="number" step="0.01" name="Stipendio" value="${data ? data.stipendio : ''}" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>IBAN</label>
+                                            <input type="text" name="IBAN" value="${data ? data.iban : ''}" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Posizione</label>
+                                            <input type="text" name="Tipo" value="${data ? data.posizione : ''}" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Admin</label>
+                                            <input type="checkbox" name="Is_admin" value="1" ${data && data.is_admin ? 'checked' : ''}>
+                                        </div>
+                                        <div class="form-group">
+                                            <button type="submit" class="btn-success">Salva</button>
+                                            <button type="button" class="btn-cancel" onclick="hideForm('${section}')">Annulla</button>
+                                        </div>
+                                    </form>
+                                `;
+                            }
+                        });
                     }
                 }
                 
@@ -725,6 +703,14 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                 function saveItem(event, section, id) {
                     event.preventDefault();
                     const form = event.target;
+                    const submitBtn = form.querySelector('button[type="submit"]');
+                    
+                    // Disabilita il bottone durante l'invio
+                    if(submitBtn) {
+                        submitBtn.disabled = true;
+                        submitBtn.innerText = 'Salvataggio...';
+                    }
+                    
                     const formData = new FormData(form);
                     formData.append('action', id ? `update${section.charAt(0).toUpperCase() + section.slice(1)}` : `add${section.charAt(0).toUpperCase() + section.slice(1)}`);
                     if(id) formData.append('id', id);
@@ -733,17 +719,33 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                         method: 'POST',
                         body: formData
                     })
-                    .then(response => response.json())
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`Errore HTTP ${response.status}`);
+                        }
+                        return response.json();
+                    })
                     .then(data => {
                         if(data.success) {
                             hideForm(section);
                             loadData(section);
-                            if(section === 'dashboard') loadData('dashboard');
+                            alert('✓ Elemento salvato con successo!');
                         } else {
-                            alert('Errore: ' + data.message);
+                            alert('✗ Errore: ' + (data.message || 'Errore sconosciuto'));
+                            if(submitBtn) {
+                                submitBtn.disabled = false;
+                                submitBtn.innerText = 'Salva';
+                            }
                         }
                     })
-                    .catch(error => console.error('Errore:', error));
+                    .catch(error => {
+                        console.error('Dettagli errore:', error);
+                        alert('✗ Errore nella comunicazione con il server: ' + error.message);
+                        if(submitBtn) {
+                            submitBtn.disabled = false;
+                            submitBtn.innerText = 'Salva';
+                        }
+                    });
                 }
                 
                 // Funzione per modificare un elemento
