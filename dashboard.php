@@ -488,7 +488,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                 }
 
                 function add_employee() {
-                    location.href = 'SignUP.php';
+                    showForm('dipendenti');
                 }
                 
                 // Funzione per renderizzare il form
@@ -654,7 +654,11 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                                         </div>
                                         <div class="form-group">
                                             <label>Password ${id ? '(lascia vuoto per non cambiare)' : ''}</label>
-                                            <input type="password" name="Pswd" ${id ? '' : 'required'}>
+                                            <input type="password" name="Pswd" id="pswd_dipendenti" ${id ? '' : 'required'}>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Conferma Password ${id ? '(lascia vuoto per non cambiare)' : ''}</label>
+                                            <input type="password" name="ConfirmPswd" id="confirm_pswd_dipendenti" ${id ? '' : 'required'}>
                                         </div>
                                         <div class="form-group">
                                             <label>Nome</label>
@@ -704,6 +708,24 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                     event.preventDefault();
                     const form = event.target;
                     const submitBtn = form.querySelector('button[type="submit"]');
+                    
+                    // Valida le password per i dipendenti
+                    if(section === 'dipendenti') {
+                        const pswd = document.getElementById('pswd_dipendenti')?.value || '';
+                        const confirmPswd = document.getElementById('confirm_pswd_dipendenti')?.value || '';
+                        
+                        // Se è una modifica, almeno uno dei campi deve essere vuoto (non obbligatori) o corrispondenti
+                        // Se è una nuova aggiunta, entrambi devono essere compilati
+                        if(pswd || confirmPswd) {
+                            if(pswd !== confirmPswd) {
+                                alert('✗ Le password non corrispondono!');
+                                return;
+                            }
+                        } else if(!id) {
+                            alert('✗ Inserisci una password!');
+                            return;
+                        }
+                    }
                     
                     // Disabilita il bottone durante l'invio
                     if(submitBtn) {

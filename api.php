@@ -438,17 +438,17 @@ function getDipendenti() {
 function addDipendente() {
     global $pdo;
     try {
-        $id_filiale =         $id_filiale =         $id_filiale =         $id_filiale = $_POST['id_filiale'];POST['ID_Filiale'];POST['ID_Filiale'];POST['ID_Filiale'];
-        $username =         $username =         $username =         $username = $_POST['username'];POST['Username'];POST['Username'];POST['Username'];
-        $pswd = hash('sha256', $_POST['pswd']);
-        $nome =         $nome = $_POST['nome'];POST['Nome'];
-        $cognome =         $cognome = $_POST['cognome'];POST['Cognome'];
-        $email =         $email = $_POST['email'];POST['Email'];
-        $data_assunzione =         $data_assunzione = $_POST['data_assunzione'];POST['Data_Assunzione'];
-        $stipendio =         $stipendio = $_POST['stipendio'];POST['Stipendio'];
-        $iban =         $iban = $_POST['iban'];POST['IBAN'];
-        $tipo =         $tipo = $_POST['tipo'];POST['Tipo'];
-        $is_admin =         $is_admin = $_POST['is_admin'] ?? 0;POST['Is_admin'] ?? 0;
+        $id_filiale = $_POST['ID_Filiale'];
+        $username = $_POST['Username'];
+        $pswd = hash('sha256', $_POST['Pswd']);
+        $nome = $_POST['Nome'];
+        $cognome = $_POST['Cognome'];
+        $email = $_POST['Email'];
+        $data_assunzione = $_POST['Data_Assunzione'];
+        $stipendio = $_POST['Stipendio'];
+        $iban = $_POST['IBAN'];
+        $tipo = $_POST['Tipo'];
+        $is_admin = $_POST['Is_admin'] ?? 0;
 
         $sql = "INSERT INTO dipendenti (ID_Filiale, Username, Pswd, Nome, Cognome, Email, Data_Assunzione, Stipendio, IBAN, Tipo, Is_admin) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         $stmt = $pdo->prepare($sql);
@@ -464,17 +464,17 @@ function updateDipendente() {
     global $pdo;
     try {
         $id = $_POST['id'];
-        $id_filiale =         $id_filiale =         $id_filiale =         $id_filiale = $_POST['id_filiale'];POST['ID_Filiale'];POST['ID_Filiale'];POST['ID_Filiale'];
-        $username =         $username =         $username =         $username = $_POST['username'];POST['Username'];POST['Username'];POST['Username'];
-        $pswd = isset($_POST['pswd']) && !empty($_POST['pswd']) ? hash('sha256', $_POST['pswd']) : null;
-        $nome =         $nome = $_POST['nome'];POST['Nome'];
-        $cognome =         $cognome = $_POST['cognome'];POST['Cognome'];
-        $email =         $email = $_POST['email'];POST['Email'];
-        $data_assunzione =         $data_assunzione = $_POST['data_assunzione'];POST['Data_Assunzione'];
-        $stipendio =         $stipendio = $_POST['stipendio'];POST['Stipendio'];
-        $iban =         $iban = $_POST['iban'];POST['IBAN'];
-        $tipo =         $tipo = $_POST['tipo'];POST['Tipo'];
-        $is_admin =         $is_admin = $_POST['is_admin'] ?? 0;POST['Is_admin'] ?? 0;
+        $id_filiale = $_POST['ID_Filiale'];
+        $username = $_POST['Username'];
+        $pswd = isset($_POST['Pswd']) && !empty($_POST['Pswd']) ? hash('sha256', $_POST['Pswd']) : null;
+        $nome = $_POST['Nome'];
+        $cognome = $_POST['Cognome'];
+        $email = $_POST['Email'];
+        $data_assunzione = $_POST['Data_Assunzione'];
+        $stipendio = $_POST['Stipendio'];
+        $iban = $_POST['IBAN'];
+        $tipo = $_POST['Tipo'];
+        $is_admin = $_POST['Is_admin'] ?? 0;
 
         $sql = $pswd ? "UPDATE dipendenti SET ID_Filiale = ?, Username = ?, Pswd = ?, Nome = ?, Cognome = ?, Email = ?, Data_Assunzione = ?, Stipendio = ?, IBAN = ?, Tipo = ?, Is_admin = ? WHERE ID_Dipendente = ?" : "UPDATE dipendenti SET ID_Filiale = ?, Username = ?, Nome = ?, Cognome = ?, Email = ?, Data_Assunzione = ?, Stipendio = ?, IBAN = ?, Tipo = ?, Is_admin = ? WHERE ID_Dipendente = ?";
         $params = $pswd ? [$id_filiale, $username, $pswd, $nome, $cognome, $email, $data_assunzione, $stipendio, $iban, $tipo, $is_admin, $id] : [$id_filiale, $username, $nome, $cognome, $email, $data_assunzione, $stipendio, $iban, $tipo, $is_admin, $id];
