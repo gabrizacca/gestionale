@@ -37,6 +37,47 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
         }
         .notification.success { background-color: #4CAF50; }
         .notification.error { background-color: #f44336; }
+        .search-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f5f5f5;
+            border-radius: 5px;
+            flex-wrap: wrap;
+        }
+        .search-bar select,
+        .search-bar input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .search-bar input {
+            flex: 1;
+            min-width: 200px;
+        }
+        .search-bar button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .btn-secondary {
+            background-color: #2196F3;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background-color: #0b7dda;
+        }
+        .search-bar .btn-secondary:last-child {
+            background-color: #6c757d;
+        }
+        .search-bar .btn-secondary:last-child:hover {
+            background-color: #5a6268;
+        }
     </style>
     
 </head>
@@ -141,6 +182,17 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                                 <h2>Gestione Ordini</h2>
                                 <button class="btn-primary" onclick="showForm('ordini')">Nuovo Ordine</button>
                             </div>
+                            <div class="search-bar">
+                                <select id="ordiniSearchField" onchange="searchAndSort('ordini')">
+                                    <option value="">Seleziona campo ricerca</option>
+                                    <option value="cliente">Cliente</option>
+                                    <option value="prodotto">Prodotto</option>
+                                    <option value="dipendente">Dipendente</option>
+                                </select>
+                                <input type="text" id="ordiniSearchInput" placeholder="Inserisci termine di ricerca..." onkeyup="searchAndSort('ordini')">
+                                <button class="btn-secondary" onclick="sortDescending('ordini')">↓ Ordina Decrescente</button>
+                                <button class="btn-secondary" onclick="clearSearchAndSort('ordini')">✕ Ripristina</button>
+                            </div>
                             <div class="table-responsive">
                                 <table class="data-table">
                                     <thead>
@@ -167,6 +219,15 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                                 <h2>Gestione Prodotti</h2>
                                 <button class="btn-primary" onclick="showForm('prodotti')">Nuovo Prodotto</button>
                             </div>
+                            <div class="search-bar">
+                                <select id="prodottiSearchField" onchange="searchAndSort('prodotti')">
+                                    <option value="">Seleziona campo ricerca</option>
+                                    <option value="descrizione">Descrizione</option>
+                                </select>
+                                <input type="text" id="prodottiSearchInput" placeholder="Inserisci termine di ricerca..." onkeyup="searchAndSort('prodotti')">
+                                <button class="btn-secondary" onclick="sortDescending('prodotti')">↓ Ordina Decrescente</button>
+                                <button class="btn-secondary" onclick="clearSearchAndSort('prodotti')">✕ Ripristina</button>
+                            </div>
                             <div class="table-responsive">
                                 <table class="data-table">
                                     <thead>
@@ -188,6 +249,17 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                             <div class="section-header">
                                 <h2>Gestione Clienti</h2>
                                 <button class="btn-primary" onclick="showForm('clienti')">Nuovo Cliente</button>
+                            </div>
+                            <div class="search-bar">
+                                <select id="clientiSearchField" onchange="searchAndSort('clienti')">
+                                    <option value="">Seleziona campo ricerca</option>
+                                    <option value="nome_azienda">Nome Azienda</option>
+                                    <option value="indirizzo">Indirizzo</option>
+                                    <option value="email">Email</option>
+                                </select>
+                                <input type="text" id="clientiSearchInput" placeholder="Inserisci termine di ricerca..." onkeyup="searchAndSort('clienti')">
+                                <button class="btn-secondary" onclick="sortDescending('clienti')">↓ Ordina Decrescente</button>
+                                <button class="btn-secondary" onclick="clearSearchAndSort('clienti')">✕ Ripristina</button>
                             </div>
                             <div class="table-responsive">
                                 <table class="data-table">
@@ -214,6 +286,16 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                                 <h2>Gestione Magazzini</h2>
                                 <button class="btn-primary" onclick="showForm('magazzini')">Nuovo Magazzino</button>
                             </div>
+                            <div class="search-bar">
+                                <select id="magazziniSearchField" onchange="searchAndSort('magazzini')">
+                                    <option value="">Seleziona campo ricerca</option>
+                                    <option value="indirizzo">Indirizzo</option>
+                                    <option value="descrizione">Descrizione</option>
+                                </select>
+                                <input type="text" id="magazziniSearchInput" placeholder="Inserisci termine di ricerca..." onkeyup="searchAndSort('magazzini')">
+                                <button class="btn-secondary" onclick="sortDescending('magazzini')">↓ Ordina Decrescente</button>
+                                <button class="btn-secondary" onclick="clearSearchAndSort('magazzini')">✕ Ripristina</button>
+                            </div>
                             <div class="table-responsive">
                                 <table class="data-table">
                                     <thead>
@@ -236,6 +318,16 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                             <div class="section-header">
                                 <h2>Gestione Filiali</h2>
                                 <button class="btn-primary" onclick="showForm('filiali')">Nuova Filiale</button>
+                            </div>
+                            <div class="search-bar">
+                                <select id="filialiSearchField" onchange="searchAndSort('filiali')">
+                                    <option value="">Seleziona campo ricerca</option>
+                                    <option value="indirizzo">Indirizzo</option>
+                                    <option value="tipo">Tipo</option>
+                                </select>
+                                <input type="text" id="filialiSearchInput" placeholder="Inserisci termine di ricerca..." onkeyup="searchAndSort('filiali')">
+                                <button class="btn-secondary" onclick="sortDescending('filiali')">↓ Ordina Decrescente</button>
+                                <button class="btn-secondary" onclick="clearSearchAndSort('filiali')">✕ Ripristina</button>
                             </div>
                             <div class="table-responsive">
                                 <table class="data-table">
@@ -263,6 +355,18 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                             </div>
                             <div class="section-list">
                                 <h3>Lista Dipendenti</h3>
+                                <div class="search-bar">
+                                    <select id="dipendentiSearchField" onchange="searchAndSort('dipendenti')">
+                                        <option value="">Seleziona campo ricerca</option>
+                                        <option value="nome">Nome</option>
+                                        <option value="cognome">Cognome</option>
+                                        <option value="posizione">Posizione</option>
+                                        <option value="filiale">Filiale</option>
+                                    </select>
+                                    <input type="text" id="dipendentiSearchInput" placeholder="Inserisci termine di ricerca..." onkeyup="searchAndSort('dipendenti')">
+                                    <button class="btn-secondary" onclick="sortDescending('dipendenti')">↓ Ordina Decrescente</button>
+                                    <button class="btn-secondary" onclick="clearSearchAndSort('dipendenti')">✕ Ripristina</button>
+                                </div>
                                 <div class="table-responsive">
                                     <table class="data-table">
                                         <thead>
@@ -295,6 +399,107 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                 let dipendentiData = [];
                 let dipendentiCurrentPage = 1;
                 const dipendentiPerPage = 10;
+                
+                // Variabili per memorizzare i dati originali di tutte le sezioni
+                let tableDataCache = {
+                    ordini: [],
+                    prodotti: [],
+                    clienti: [],
+                    magazzini: [],
+                    filiali: [],
+                    dipendenti: []
+                };
+                
+                // Variabili per tracciare lo stato di ordinamento
+                let sortState = {
+                    ordini: false,
+                    prodotti: false,
+                    clienti: false,
+                    magazzini: false,
+                    filiali: false,
+                    dipendenti: false
+                };
+                
+                /**
+                 * Funzione principale di ricerca e ordinamento
+                 * @param {string} section - Sezione della tabella (ordini, clienti, etc.)
+                 */
+                function searchAndSort(section) {
+                    const searchField = document.getElementById(`${section}SearchField`)?.value || '';
+                    const searchInput = document.getElementById(`${section}SearchInput`)?.value.toLowerCase() || '';
+                    
+                    if (!searchField || !searchInput) {
+                        // Se nessun filtro è selezionato, mostra i dati originali
+                        updateTable(section, tableDataCache[section]);
+                        return;
+                    }
+                    
+                    // Filtra i dati in base al campo e al termine di ricerca
+                    const filtered = tableDataCache[section].filter(item => {
+                        const fieldValue = item[searchField]?.toString().toLowerCase() || '';
+                        return fieldValue.includes(searchInput);
+                    });
+                    
+                    updateTable(section, filtered);
+                }
+                
+                /**
+                 * Ordina i dati in ordine decrescente
+                 * @param {string} section - Sezione della tabella
+                 */
+                function sortDescending(section) {
+                    const searchField = document.getElementById(`${section}SearchField`)?.value;
+                    const tableBody = document.getElementById(`${section}Table`);
+                    
+                    if (!tableBody) return;
+                    
+                    // Se non c'è un campo selezionato, ordina per ID/prima colonna
+                    let sortKey = searchField || (section === 'dipendenti' ? 'id_dipendente' : 'id');
+                    
+                    // Prendi i dati visualizzati e ordina in modo decrescente
+                    const rows = Array.from(tableBody.querySelectorAll('tr'));
+                    const dataToSort = rows.map(row => {
+                        const cells = row.querySelectorAll('td');
+                        return {row: row, data: cells[0]?.textContent || ''};
+                    });
+                    
+                    // Ordina decrescente (alfabetico per stringhe, numerico per numeri)
+                    dataToSort.sort((a, b) => {
+                        const aVal = isNaN(a.data) ? a.data : parseFloat(a.data);
+                        const bVal = isNaN(b.data) ? b.data : parseFloat(b.data);
+                        return bVal > aVal ? 1 : -1;
+                    });
+                    
+                    // Ricrea la tabella con i dati ordinati
+                    tableBody.innerHTML = '';
+                    dataToSort.forEach(item => {
+                        tableBody.appendChild(item.row);
+                    });
+                    
+                    sortState[section] = true;
+                }
+                
+                /**
+                 * Ripristina la vista originale senza filtri
+                 * @param {string} section - Sezione della tabella
+                 */
+                function clearSearchAndSort(section) {
+                    // Resetta i campi di input
+                    const searchField = document.getElementById(`${section}SearchField`);
+                    const searchInput = document.getElementById(`${section}SearchInput`);
+                    
+                    if (searchField) searchField.value = '';
+                    if (searchInput) searchInput.value = '';
+                    
+                    // Ripristina i dati originali
+                    if (section === 'dipendenti') {
+                        updateDipendentiTable();
+                    } else {
+                        updateTable(section, tableDataCache[section]);
+                    }
+                    
+                    sortState[section] = false;
+                }                
                 // Funzione per cambiare sezione
                 function showSection(section) {
                     document.querySelectorAll('.content-section').forEach(el => el.classList.remove('active'));
@@ -313,6 +518,9 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                         .then(response => response.json())
                         .then(data => {
                             if(data.success) {
+                                // Memorizza i dati nella cache
+                                tableDataCache[section] = data.data;
+                                
                                 if(section === 'dipendenti') {
                                     dipendentiData = data.data;
                                     dipendentiCurrentPage = 1;
@@ -423,9 +631,12 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                     
                     tableBody.innerHTML = '';
                     
+                    // Usa i dati in cache (possono essere filtrati)
+                    const dataToDisplay = dipendentiData.length > 0 ? dipendentiData : tableDataCache.dipendenti;
+                    
                     const start = (dipendentiCurrentPage - 1) * dipendentiPerPage;
                     const end = start + dipendentiPerPage;
-                    const pageData = dipendentiData.slice(start, end);
+                    const pageData = dataToDisplay.slice(start, end);
                     
                     pageData.forEach(item => {
                         tableBody.innerHTML += `
@@ -443,7 +654,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                         `;
                     });
                     
-                    const totalPages = Math.ceil(dipendentiData.length / dipendentiPerPage);
+                    const totalPages = Math.ceil(dataToDisplay.length / dipendentiPerPage);
                     pageInfo.textContent = `Pagina ${dipendentiCurrentPage} di ${totalPages}`;
                     
                     if(totalPages > 1) {
@@ -751,6 +962,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                         if(data.success) {
                             hideForm(section);
                             loadData(section);
+                            updateDashboardStats(); // Aggiorna le statistiche della homepage
                             alert('✓ Elemento salvato con successo!');
                         } else {
                             alert('✗ Errore: ' + (data.message || 'Errore sconosciuto'));
@@ -790,6 +1002,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                         .then(data => {
                             if(data.success) {
                                 loadData(section);
+                                updateDashboardStats(); // Aggiorna le statistiche della homepage
                                 if(section === 'dashboard') loadData('dashboard');
                             } else {
                                 alert('Errore: ' + data.message);
