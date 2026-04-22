@@ -190,7 +190,7 @@ function addCliente() {
         $nome_azienda = $_POST['Nome_Azienda'];
         $indirizzo = $_POST['Indirizzo'];
         $p_iva = $_POST['P_IVA'];
-        $email =         $email = $_POST['Email'];POST['Email'];
+        $email = $_POST['Email'];
 
         $sql = "INSERT INTO clienti (Nome_Azienda, Indirizzo, P_IVA, Email) VALUES (?, ?, ?, ?)";
         $stmt = $pdo->prepare($sql);
@@ -209,7 +209,7 @@ function updateCliente() {
         $nome_azienda = $_POST['Nome_Azienda'];
         $indirizzo = $_POST['Indirizzo'];
         $p_iva = $_POST['P_IVA'];
-        $email =         $email = $_POST['Email'];POST['Email'];
+        $email = $_POST['Email'];
 
         $sql = "UPDATE clienti SET Nome_Azienda = ?, Indirizzo = ?, P_IVA = ?, Email = ? WHERE ID_Cliente = ?";
         $stmt = $pdo->prepare($sql);
@@ -254,7 +254,7 @@ function addFiliale() {
     global $pdo;
     try {
         $indirizzo = $_POST['Indirizzo'];
-        $tipo =         $tipo = $_POST['Tipo'];POST['Tipo'];
+        $tipo = $_POST['Tipo'];
         $recapito = $_POST['Recapito_Telefonico'];
 
         $sql = "INSERT INTO filiali (Indirizzo, Tipo, Recapito_Telefonico) VALUES (?, ?, ?)";
@@ -272,7 +272,7 @@ function updateFiliale() {
     try {
         $id = $_POST['id'];
         $indirizzo = $_POST['Indirizzo'];
-        $tipo =         $tipo = $_POST['Tipo'];POST['Tipo'];
+        $tipo = $_POST['Tipo'];
         $recapito = $_POST['Recapito_Telefonico'];
 
         $sql = "UPDATE filiali SET Indirizzo = ?, Tipo = ?, Recapito_Telefonico = ? WHERE id_filiale = ?";
@@ -424,7 +424,8 @@ function getDipendenti() {
     global $pdo;
     try {
         $id = $_GET['id'] ?? null;
-        $sql = "SELECT d.ID_Dipendente as id_dipendente, d.ID_Dipendente as id, CONCAT(d.Nome, ' ', d.Cognome) as nome_completo, d.Nome as nome, d.Cognome as cognome, d.Tipo as posizione, f.Indirizzo as filiale, d.ID_Filiale as id_filiale, d.Username as username, d.Email as email, d.Data_Assunzione as data_assunzione, d.Stipendio as stipendio, d.IBAN as iban, d.Is_admin as is_admin FROM dipendenti d LEFT JOIN filiali f ON d.ID_Filiale = f.id_filiale";
+        $where = $id ? "WHERE d.ID_Dipendente = ?" : "";
+        $sql = "SELECT d.ID_Dipendente as id_dipendente, d.ID_Dipendente as id, CONCAT(d.Nome, ' ', d.Cognome) as nome_completo, d.Nome as nome, d.Cognome as cognome, d.Tipo as posizione, f.Indirizzo as filiale, d.ID_Filiale as id_filiale, d.Username as username, d.Email as email, d.Data_Assunzione as data_assunzione, d.Stipendio as stipendio, d.IBAN as iban, d.Is_admin as is_admin FROM dipendenti d LEFT JOIN filiali f ON d.ID_Filiale = f.id_filiale $where";
         $stmt = $pdo->prepare($sql);
         $stmt->execute($id ? [$id] : []);
         $dipendenti = $stmt->fetchAll();
@@ -505,27 +506,12 @@ function getDashboardStats() {
     try {
         $stats = [];
 
-        $stmt = $pdo->query("SELECT COUNT(*) as total FROM ordini");
-        $stats['totalOrdini'] = $stmt->fetch()['total'];
-
-        $stmt = $pdo->query("SELECT COUNT(*) as total FROM prodotti");
-        $stats['totalProdotti'] = $stmt->fetch()['total'];
-
-        $stmt = $pdo->query("SELECT COUNT(*) as total FROM clienti");
-        $stats['totalClienti'] = $stmt->fetch()['total'];
-
-        $stmt = $pdo->query("SELECT COUNT(*) as total FROM magazzini");
-        $stats['totalMagazzini'] = $stmt->fetch()['total'];
-
-        $stmt = $pdo->query("SELECT COUNT(*) as total FROM filiali");
-        $stats['totalFiliali'] = $stmt->fetch()['total'];
-
-        $stmt = $pdo->query("SELECT COUNT(*) as total FROM dipendenti");
-        $stats['totalDipendenti'] = $stmt->fetch()['total'];
-
-        // Ordini recenti
-        $stmt = $pdo->query("SELECT o.ID_Ordine as id, c.Nome_Azienda as cliente, o.Data_Ordine as data, 'In corso' as stato FROM ordini o LEFT JOIN clienti c ON o.ID_Cliente = c.ID_Cliente ORDER BY o.Data_Ordine DESC LIMIT 5");
-        $stats['recentOrders'] = $stmt->fetchAll();
+        $stats['totalOrdini'] = (int)$pdo->query("SELECT COUNT(DISTINCT ID_Ordine) FROM ordini")->fetchColumn();
+        $stats['totalProdotti'] = (int)$pdo->query("SELECT COUNT(DISTINCT ID_Prodotto) FROM prodotti")->fetchColumn();
+        $stats['totalClienti'] = (int)$pdo->query("SELECT COUNT(DISTINCT ID_Cliente) FROM clienti")->fetchColumn();
+        $stats['totalMagazzini'] = (int)$pdo->query("SELECT COUNT(DISTINCT ID_Magazzino) FROM magazzini")->fetchColumn();
+        $stats['totalFiliali'] = (int)$pdo->query("SELECT COUNT(DISTINCT id_filiale) FROM filiali")->fetchColumn();
+        $stats['totalDipendenti'] = (int)$pdo->query("SELECT COUNT(DISTINCT ID_Dipendente) FROM dipendenti")->fetchColumn();
 
         echo json_encode(['success' => true, 'data' => $stats]);
     } catch (Exception $e) {

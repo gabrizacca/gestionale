@@ -156,24 +156,6 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                                     <p class="stat-number" id="totalDipendenti">0</p>
                                 </div>
                             </div>
-                            
-                            <div class="recent-orders">
-                                <h3>Ordini Recenti</h3>
-                                <div class="table-responsive">
-                                    <table class="data-table">
-                                        <thead>
-                                            <tr>
-                                                <th>ID Ordine</th>
-                                                <th>Cliente</th>
-                                                <th>Data</th>
-                                                <th>Stato</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="recentOrdersTable">
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
                         </div>
         
                         <!-- Ordini -->
@@ -430,7 +412,13 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                     
                     if (!searchField || !searchInput) {
                         // Se nessun filtro è selezionato, mostra i dati originali
-                        updateTable(section, tableDataCache[section]);
+                        if (section === 'dipendenti') {
+                            dipendentiData = tableDataCache[section];
+                            dipendentiCurrentPage = 1;
+                            updateDipendentiTable();
+                        } else {
+                            updateTable(section, tableDataCache[section]);
+                        }
                         return;
                     }
                     
@@ -440,7 +428,13 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                         return fieldValue.includes(searchInput);
                     });
                     
-                    updateTable(section, filtered);
+                    if (section === 'dipendenti') {
+                        dipendentiData = filtered;
+                        dipendentiCurrentPage = 1;
+                        updateDipendentiTable();
+                    } else {
+                        updateTable(section, filtered);
+                    }
                 }
                 
                 /**
@@ -1031,21 +1025,8 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                                 document.getElementById('totalProdotti').innerText = data.data.totalProdotti;
                                 document.getElementById('totalClienti').innerText = data.data.totalClienti;
                                 document.getElementById('totalMagazzini').innerText = data.data.totalMagazzini;
-                                
-                                // Aggiorna ordini recenti
-                                const recentOrdersTable = document.getElementById('recentOrdersTable');
-                                recentOrdersTable.innerHTML = '';
-                                data.data.recentOrders.forEach(order => {
-                                    const badgeClass = order.stato === 'Completato' ? 'success' : 'warning';
-                                    recentOrdersTable.innerHTML += `
-                                        <tr>
-                                            <td>#${order.id}</td>
-                                            <td>${order.cliente}</td>
-                                            <td>${order.data}</td>
-                                            <td><span class="badge ${badgeClass}">${order.stato}</span></td>
-                                        </tr>
-                                    `;
-                                });
+                                document.getElementById('totalFiliali').innerText = data.data.totalFiliali;
+                                document.getElementById('totalDipendenti').innerText = data.data.totalDipendenti;
                             }
                         })
                         .catch(error => console.error('Errore:', error));
@@ -1062,7 +1043,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                 
                 // Carica i dati iniziali
                 document.addEventListener('DOMContentLoaded', () => {
-                    loadData('dashboard');
+                    updateDashboardStats();
                     // Mostra notifica se presente
                     <?php if ($message): ?>
                         document.getElementById('notification').style.display = 'block';
