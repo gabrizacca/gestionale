@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Creato il: Apr 20, 2026 alle 17:25
+-- Creato il: Apr 22, 2026 alle 16:19
 -- Versione del server: 10.4.32-MariaDB
 -- Versione PHP: 8.2.12
 
@@ -40,7 +40,8 @@ CREATE TABLE `clienti` (
 --
 
 INSERT INTO `clienti` (`ID_Cliente`, `Nome_Azienda`, `Indirizzo`, `P_IVA`, `Email`) VALUES
-(1, 'Jesus of sorbetto', 'Via Campisio 12', '01234560123 ', 'valepicci2000@gmail.com');
+(1, 'Jesus of sorbetto', 'Via Campisio 12', '01234560123 ', 'valepicci2000@gmail.com'),
+(4, 'val3p 96', 'Via campisio 12 b', '0124560124', 'cppiplay@gmail.com');
 
 -- --------------------------------------------------------
 
@@ -68,7 +69,7 @@ CREATE TABLE `dipendenti` (
 --
 
 INSERT INTO `dipendenti` (`ID_Dipendente`, `ID_Filiale`, `Username`, `Pswd`, `Nome`, `Cognome`, `Email`, `Data_Assunzione`, `Stipendio`, `IBAN`, `Tipo`, `Is_admin`) VALUES
-(1, 1, 'croix89', '5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8', 'Marco', 'Merrino', 'Marcomerrino89@gmail.com', '2026-02-26', 2345.00, 'IBAN', 'Boss', 0),
+(1, 1, 'croix89', 'b133a0c0e9bee3be20163d2ad31d6248db292aa6dcb1ee087a2aa50e0fc75ae2', 'Marco', 'Merrino', 'Marcomerrino89@gmail.com', '2026-02-26', 2345.00, 'IBAN', 'Boss', 1),
 (2, 1, 'ValePicciuz', 'b133a0c0e9bee3be20163d2ad31d6248db292aa6dcb1ee087a2aa50e0fc75ae2', 'valerio', 'piccinini', 'piccinini.valerio@einaudicorreggio.it', '2026-02-27', 1.00, 'BELLAZI', 'schiavo', NULL),
 (3, 1, 'admin', '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', 'admin', 'admin', 'valepicci2000@gmail.com', '2026-04-16', 2000.00, 'vbfhebiwd', 'amministratore', 1),
 (5, 1, 'jesu', '5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8', 'Jesus', 'sorbetto', 'davide.campani@einaudicorreggio.it', '2026-04-19', 1899.00, 'jesu', 'dio', 0);
@@ -115,13 +116,21 @@ INSERT INTO `magazzini` (`ID_Magazzino`, `Indirizzo`, `Desc_Magazzino`) VALUES
 -- --------------------------------------------------------
 
 --
--- Struttura della tabella `magazzino_prodotti`
+-- Struttura della tabella `magazzini_prodotti`
 --
 
-CREATE TABLE `magazzino_prodotti` (
-  `ID_Magazzino` int(11) NOT NULL,
-  `ID_Prodotto` int(11) NOT NULL
+CREATE TABLE `magazzini_prodotti` (
+  `id_prodotto` int(11) NOT NULL,
+  `id_magazzino` int(11) NOT NULL,
+  `quantita` int(11) DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dump dei dati per la tabella `magazzini_prodotti`
+--
+
+INSERT INTO `magazzini_prodotti` (`id_prodotto`, `id_magazzino`, `quantita`) VALUES
+(1, 1, 50);
 
 -- --------------------------------------------------------
 
@@ -138,6 +147,14 @@ CREATE TABLE `ordini` (
   `ID_prodotto` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dump dei dati per la tabella `ordini`
+--
+
+INSERT INTO `ordini` (`ID_Ordine`, `ID_Cliente`, `ID_Dipendente`, `Data_Ordine`, `Data_Arrivo`, `ID_prodotto`) VALUES
+(1, 1, 2, '2026-04-21', '2026-04-23', 1),
+(2, 4, 1, '2026-04-21', '2026-04-25', 1);
+
 -- --------------------------------------------------------
 
 --
@@ -146,16 +163,16 @@ CREATE TABLE `ordini` (
 
 CREATE TABLE `prodotti` (
   `ID_Prodotto` int(11) NOT NULL,
-  `Desc_prodotto` varchar(255) DEFAULT NULL
+  `Nome` varchar(255) DEFAULT NULL,
+  `Descrizione` text NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dump dei dati per la tabella `prodotti`
 --
 
-INSERT INTO `prodotti` (`ID_Prodotto`, `Desc_prodotto`) VALUES
-(1, 'Macchina potatrice'),
-(2, 'alice');
+INSERT INTO `prodotti` (`ID_Prodotto`, `Nome`, `Descrizione`) VALUES
+(1, 'Macchina potatrice', '');
 
 --
 -- Indici per le tabelle scaricate
@@ -189,11 +206,11 @@ ALTER TABLE `magazzini`
   ADD PRIMARY KEY (`ID_Magazzino`);
 
 --
--- Indici per le tabelle `magazzino_prodotti`
+-- Indici per le tabelle `magazzini_prodotti`
 --
-ALTER TABLE `magazzino_prodotti`
-  ADD PRIMARY KEY (`ID_Magazzino`,`ID_Prodotto`),
-  ADD KEY `ID_Prodotto` (`ID_Prodotto`);
+ALTER TABLE `magazzini_prodotti`
+  ADD PRIMARY KEY (`id_prodotto`,`id_magazzino`),
+  ADD KEY `fk_magazzino_rel` (`id_magazzino`);
 
 --
 -- Indici per le tabelle `ordini`
@@ -218,7 +235,7 @@ ALTER TABLE `prodotti`
 -- AUTO_INCREMENT per la tabella `clienti`
 --
 ALTER TABLE `clienti`
-  MODIFY `ID_Cliente` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `ID_Cliente` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT per la tabella `dipendenti`
@@ -242,7 +259,7 @@ ALTER TABLE `magazzini`
 -- AUTO_INCREMENT per la tabella `ordini`
 --
 ALTER TABLE `ordini`
-  MODIFY `ID_Ordine` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `ID_Ordine` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT per la tabella `prodotti`
@@ -261,11 +278,11 @@ ALTER TABLE `dipendenti`
   ADD CONSTRAINT `dipendenti_ibfk_1` FOREIGN KEY (`ID_Filiale`) REFERENCES `filiali` (`id_filiale`);
 
 --
--- Limiti per la tabella `magazzino_prodotti`
+-- Limiti per la tabella `magazzini_prodotti`
 --
-ALTER TABLE `magazzino_prodotti`
-  ADD CONSTRAINT `magazzino_prodotti_ibfk_1` FOREIGN KEY (`ID_Magazzino`) REFERENCES `magazzini` (`ID_Magazzino`),
-  ADD CONSTRAINT `magazzino_prodotti_ibfk_2` FOREIGN KEY (`ID_Prodotto`) REFERENCES `prodotti` (`ID_Prodotto`);
+ALTER TABLE `magazzini_prodotti`
+  ADD CONSTRAINT `fk_magazzino_rel` FOREIGN KEY (`id_magazzino`) REFERENCES `magazzini` (`ID_Magazzino`),
+  ADD CONSTRAINT `fk_prodotto_rel` FOREIGN KEY (`id_prodotto`) REFERENCES `prodotti` (`ID_Prodotto`);
 
 --
 -- Limiti per la tabella `ordini`
