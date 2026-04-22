@@ -40,7 +40,7 @@ CREATE TABLE `clienti` (
 --
 
 INSERT INTO `clienti` (`ID_Cliente`, `Nome_Azienda`, `Indirizzo`, `P_IVA`, `Email`) VALUES
-(1, 'Jesus of sorbetto', 'Via Campisio 12', '01234560123 ', 'valepicci2000@gmail.com'),
+(1, 'Jesus of sorbetto', 'Via Beethoven 12', '01234560123 ', 'valepicci2000@gmail.com'),
 (4, 'val3p 96', 'Via campisio 12 b', '0124560124', 'cppiplay@gmail.com');
 
 -- --------------------------------------------------------
