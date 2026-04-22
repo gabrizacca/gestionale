@@ -204,7 +204,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                             <div class="search-bar">
                                 <select id="prodottiSearchField" onchange="searchAndSort('prodotti')">
                                     <option value="">Seleziona campo ricerca</option>
-                                    <option value="descrizione">Descrizione</option>
+                                    <option value="nome">Nome</option>
                                 </select>
                                 <input type="text" id="prodottiSearchInput" placeholder="Inserisci termine di ricerca..." onkeyup="searchAndSort('prodotti')">
                                 <button class="btn-secondary" onclick="sortDescending('prodotti')">↓ Ordina Decrescente</button>
@@ -215,6 +215,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                                     <thead>
                                         <tr>
                                             <th>ID</th>
+                                            <th>Nome</th>
                                             <th>Descrizione</th>
                                             <th>Azioni</th>
                                         </tr>
@@ -556,6 +557,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                             tableBody.innerHTML += `
                                 <tr>
                                     <td>${item.id}</td>
+                                    <td>${item.nome}</td>
                                     <td>${item.descrizione}</td>
                                     <td>
                                         <button class="btn-icon edit" onclick="editItem('prodotti', ${item.id})">✏️</button>
@@ -584,7 +586,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                         data.forEach(item => {
                             tableBody.innerHTML += `
                                 <tr>
-                                    <td>${item.id}</td>
+                                    <td><a href="prodotti_magazzini.php?idMagazzino=${item.id}" style="color: #2196F3; cursor: pointer; text-decoration: underline;">${item.id}</a></td>
                                     <td>${item.indirizzo}</td>
                                     <td>${item.descrizione}</td>
                                     <td>
@@ -710,8 +712,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                             if(clientiRes.success && dipendentiRes.success && prodottiRes.success) {
                                 const clientiOptions = clientiRes.data.map(c => `<option value="${c.id}" ${data && data.id_cliente == c.id ? 'selected' : ''}>${c.nome_azienda}</option>`).join('');
                                 const dipendentiOptions = dipendentiRes.data.map(d => `<option value="${d.id}" ${data && data.id_dipendente == d.id ? 'selected' : ''}>${d.nome_completo}</option>`).join('');
-                                const prodottiOptions = prodottiRes.data.map(p => `<option value="${p.id}" ${data && data.id_prodotto == p.id ? 'selected' : ''}>${p.descrizione}</option>`).join('');
-                                
+                                const prodottiOptions = prodottiRes.data.map(p => `<option value="${p.id}" ${data && data.id_prodotto == p.id ? 'selected' : ''}>${p.nome} - ${p.descrizione}</option>`).join('');                                
                                 formContainer.innerHTML = `
                                     <h3>${id ? 'Modifica' : 'Nuovo'} Ordine</h3>
                                     <form onsubmit="saveItem(event, '${section}', ${id || 'null'})">
@@ -756,6 +757,10 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                         formContainer.innerHTML = `
                             <h3>${id ? 'Modifica' : 'Nuovo'} Prodotto</h3>
                             <form onsubmit="saveItem(event, '${section}', ${id || 'null'})">
+                                <div class="form-group">
+                                    <label>Nome</label>
+                                    <input type="text" name="Nome" value="${data ? data.nome : ''}" required>
+                                </div>
                                 <div class="form-group">
                                     <label>Descrizione</label>
                                     <input type="text" name="Desc_prodotto" value="${data ? data.descrizione : ''}" required>

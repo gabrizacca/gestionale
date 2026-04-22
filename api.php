@@ -88,6 +88,18 @@ switch ($action) {
     case 'getDashboardStats':
         getDashboardStats();
         break;
+    case 'getProdottiMagazzini':
+        getProdottiMagazzini();
+        break;
+    case 'addProdottiMagazzini':
+        addProdottoMagazzino();
+        break;
+    case 'updateProdottiMagazzini':
+        updateProdottoMagazzino();
+        break;
+    case 'deleteProdottiMagazzini':
+        deleteProdottoMagazzino();
+        break;
     default:
         echo json_encode(['success' => false, 'message' => 'Azione non valida']);
         break;
@@ -98,7 +110,7 @@ function getOrdini() {
     try {
         $id = $_GET['id'] ?? null;
         $where = $id ? "WHERE o.ID_Ordine = ?" : "";
-        $sql = "SELECT o.ID_Ordine as id, o.ID_Cliente as id_cliente, o.ID_Dipendente as id_dipendente, o.ID_prodotto as id_prodotto, c.Nome_Azienda as cliente, p.Desc_prodotto as prodotto, o.Data_Ordine as data_ordine, o.Data_Arrivo as data_arrivo, 
+        $sql = "SELECT o.ID_Ordine as id, o.ID_Cliente as id_cliente, o.ID_Dipendente as id_dipendente, o.ID_prodotto as id_prodotto, c.Nome_Azienda as cliente, p.Nome as prodotto, o.Data_Ordine as data_ordine, o.Data_Arrivo as data_arrivo, 
                        CONCAT(d.Nome, ' ', d.Cognome) as dipendente
                 FROM ordini o
                 LEFT JOIN clienti c ON o.ID_Cliente = c.ID_Cliente
@@ -365,7 +377,7 @@ function getProdotti() {
     try {
         $id = $_GET['id'] ?? null;
         $where = $id ? "WHERE ID_Prodotto = ?" : "";
-        $sql = "SELECT ID_Prodotto as id, Desc_prodotto as descrizione FROM prodotti $where ORDER BY Desc_prodotto";
+        $sql = "SELECT ID_Prodotto as id, Nome as nome, Descrizione as descrizione FROM prodotti $where ORDER BY Nome";
         $stmt = $pdo->prepare($sql);
         $stmt->execute($id ? [$id] : []);
         $prodotti = $stmt->fetchAll();
@@ -379,11 +391,12 @@ function getProdotti() {
 function addProdotto() {
     global $pdo;
     try {
-        $descrizione = $_POST['Desc_prodotto'];
+        $nome = $_POST['Nome'];
+        $descrizione = $_POST['Descrizione'] ?? null;
 
-        $sql = "INSERT INTO prodotti (Desc_prodotto) VALUES (?)";
+        $sql = "INSERT INTO prodotti (Nome, Descrizione) VALUES (?, ?)";
         $stmt = $pdo->prepare($sql);
-        $stmt->execute([$descrizione]);
+        $stmt->execute([$nome, $descrizione]);
 
         echo json_encode(['success' => true]);
     } catch (Exception $e) {
@@ -395,11 +408,12 @@ function updateProdotto() {
     global $pdo;
     try {
         $id = $_POST['id'];
-        $descrizione = $_POST['Desc_prodotto'];
+        $nome = $_POST['Nome'];
+        $descrizione = $_POST['Descrizione'] ?? null;
 
-        $sql = "UPDATE prodotti SET Desc_prodotto = ? WHERE ID_Prodotto = ?";
+        $sql = "UPDATE prodotti SET Nome = ?, Descrizione = ? WHERE ID_Prodotto = ?";
         $stmt = $pdo->prepare($sql);
-        $stmt->execute([$descrizione, $id]);
+        $stmt->execute([$nome, $descrizione, $id]);
 
         echo json_encode(['success' => true]);
     } catch (Exception $e) {
@@ -514,6 +528,95 @@ function getDashboardStats() {
         $stats['totalDipendenti'] = (int)$pdo->query("SELECT COUNT(DISTINCT ID_Dipendente) FROM dipendenti")->fetchColumn();
 
         echo json_encode(['success' => true, 'data' => $stats]);
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    }
+}
+
+function getProdottiMagazzini() {
+    global $pdo;
+    try {
+        $id_magazzino = $_GET['idMagazzino'] ?? null;
+        $id_prodotto = $_GET['idProdotto'] ?? null;
+        
+        $where = "";
+        $params = [];
+        
+        if($id_magazzino) {
+            $where .= "WHERE mp.id_magazzino = ?";
+            $params[] = $id_magazzino;
+        }
+        if($id_prodotto) {
+            $where .= ($where ? " AND " : "WHERE ") . "mp.id_prodotto = ?";
+            $params[] = $id_prodotto;
+        }
+        
+        // AGGIORNAMENTO: Seleziono p.nome e p.descrizione (nuovi nomi campi)
+        // AGGIORNAMENTO: Modificato l'ORDER BY per usare p.nome
+        $sql = "SELECT mp.id_magazzino, mp.id_prodotto, mp.quantita, 
+                       p.nome as nome_prodotto, p.descrizione as descrizione_prodotto, 
+                       m.Indirizzo as indirizzo_magazzino
+                FROM magazzini_prodotti mp
+                LEFT JOIN prodotti p ON mp.id_prodotto = p.ID_Prodotto
+                LEFT JOIN magazzini m ON mp.id_magazzino = m.ID_Magazzino
+                $where
+                ORDER BY p.nome, m.Indirizzo";
+        
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        $data = $stmt->fetchAll();
+        
+        echo json_encode(['success' => true, 'data' => $data]);
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    }
+}
+
+function addProdottoMagazzino() {
+    global $pdo;
+    try {
+        $id_magazzino = $_POST['ID_Magazzino'];
+        $id_prodotto = $_POST['ID_Prodotto'];
+        $quantita = $_POST['Quantita'];
+
+        $sql = "INSERT INTO magazzini_prodotti (id_magazzino, id_prodotto, quantita) VALUES (?, ?, ?)";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$id_magazzino, $id_prodotto, $quantita]);
+
+        echo json_encode(['success' => true]);
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    }
+}
+
+function updateProdottoMagazzino() {
+    global $pdo;
+    try {
+        $id_magazzino = $_POST['id_magazzino'];
+        $id_prodotto = $_POST['id_prodotto'];
+        $quantita = $_POST['Quantita'];
+
+        $sql = "UPDATE magazzini_prodotti SET quantita = ? WHERE id_magazzino = ? AND id_prodotto = ?";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$quantita, $id_magazzino, $id_prodotto]);
+
+        echo json_encode(['success' => true]);
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    }
+}
+
+function deleteProdottoMagazzino() {
+    global $pdo;
+    try {
+        $id_magazzino = $_POST['id_magazzino'];
+        $id_prodotto = $_POST['id_prodotto'];
+
+        $sql = "DELETE FROM magazzini_prodotti WHERE id_magazzino = ? AND id_prodotto = ?";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$id_magazzino, $id_prodotto]);
+
+        echo json_encode(['success' => true]);
     } catch (Exception $e) {
         echo json_encode(['success' => false, 'message' => $e->getMessage()]);
     }
