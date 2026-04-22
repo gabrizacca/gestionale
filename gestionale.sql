@@ -69,11 +69,7 @@ CREATE TABLE `dipendenti` (
 --
 
 INSERT INTO `dipendenti` (`ID_Dipendente`, `ID_Filiale`, `Username`, `Pswd`, `Nome`, `Cognome`, `Email`, `Data_Assunzione`, `Stipendio`, `IBAN`, `Tipo`, `Is_admin`) VALUES
-(1, 1, 'croix89', 'b133a0c0e9bee3be20163d2ad31d6248db292aa6dcb1ee087a2aa50e0fc75ae2', 'Marco', 'Merrino', 'Marcomerrino89@gmail.com', '2026-02-26', 2345.00, 'IBAN', 'Boss', 1),
-(2, 1, 'ValePicciuz', 'b133a0c0e9bee3be20163d2ad31d6248db292aa6dcb1ee087a2aa50e0fc75ae2', 'valerio', 'piccinini', 'piccinini.valerio@einaudicorreggio.it', '2026-02-27', 1.00, 'BELLAZI', 'schiavo', 0),
-(3, 1, 'admin', '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', 'admin', 'admin', 'valepicci2000@gmail.com', '2026-04-16', 2000.00, 'vbfhebiwd', 'amministratore', 1),
-(5, 1, 'jesu', '5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8', 'Jesus', 'sorbetto', 'davide.campani@einaudicorreggio.it', '2026-04-19', 1899.00, 'jesu', 'dio', 0);
-
+(1, 1, 'admin', '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', 'admin', 'admin', 'valepicci2000@gmail.com', '2026-04-16', 2000.00, 'vbfhebiwd', 'amministratore', 1);
 -- --------------------------------------------------------
 
 --
@@ -125,7 +121,7 @@ CREATE TABLE `magazzini` (
 --
 
 INSERT INTO `magazzini` (`ID_Magazzino`, `Indirizzo`, `Desc_Magazzino`) VALUES
-(1, 'Via dai coglioni 2', 'Molto grande');
+(1, 'Via Palazzi 2', 'Molto grande');
 
 -- --------------------------------------------------------
 
@@ -144,7 +140,8 @@ CREATE TABLE `magazzini_prodotti` (
 --
 
 INSERT INTO `magazzini_prodotti` (`id_prodotto`, `id_magazzino`, `quantita`) VALUES
-(1, 1, 40);
+(1, 1, 40),
+(1,2,67);
 
 -- --------------------------------------------------------
 
@@ -165,10 +162,7 @@ CREATE TABLE `ordini` (
 --
 
 INSERT INTO `ordini` (`ID_Ordine`, `ID_Cliente`, `ID_Dipendente`, `Data_Ordine`, `Data_Arrivo`) VALUES
-(1, 1, 2, '2026-04-21', '2026-04-23'),
-(2, 4, 1, '2026-04-21', '2026-04-25'),
-(7, 1, 3, '2026-04-22', '2026-04-23'),
-(8, 1, 3, '2026-04-22', '2026-04-24');
+(1, 1, 3, '2026-04-22', '2026-04-24');
 
 -- --------------------------------------------------------
 
@@ -188,8 +182,8 @@ CREATE TABLE `prodotti` (
 --
 
 INSERT INTO `prodotti` (`ID_Prodotto`, `Nome`, `Descrizione`, `Prezzo`) VALUES
-(1, 'Macchina potatrice', '', 7500.00),
-(3, 'hair drier', 'fono crazy 10/10', 67.76);
+(1, 'Macchina potatrice', 'El terranator', 7500.00),
+(2, 'hair drier', 'fono crazy 10/10', 67.76);
 
 -- --------------------------------------------------------
 
@@ -209,7 +203,7 @@ CREATE TABLE `prodotti_ordine` (
 --
 
 INSERT INTO `prodotti_ordine` (`id_ordine`, `id_prodotto`, `id_magazzino`, `quantita`) VALUES
-(8, 1, 1, 10);
+(1, 1, 1, 10);
 
 --
 -- Indici per le tabelle scaricate
