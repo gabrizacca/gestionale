@@ -1,4 +1,12 @@
 <?php
+// Imposta il cookie sul percorso radice per renderlo leggibile da tutti i file
+session_set_cookie_params(0, "/");
+session_start();
+
+require_once 'login.php';
+
+// ... resto dei tuoi header e configurazioni
+
 error_reporting(E_ALL);
 ini_set('display_errors', '0');
 
@@ -13,6 +21,9 @@ try {
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
 switch ($action) {
+    case 'getOrdiniPersonali':
+        getOrdiniPersonali();
+        break;
     case 'getOrdini':
         getOrdini();
         break;
@@ -100,9 +111,42 @@ switch ($action) {
     case 'deleteProdottiMagazzini':
         deleteProdottoMagazzino();
         break;
+    case 'getWarehousesForProduct':
+        getWarehousesForProduct();
+        break;
+    case 'getOrderProducts':
+        getOrderProducts();
+        break;
+    case 'addOrderProduct':
+        addOrderProduct();
+        break;
+    case 'deleteOrderProduct':
+        deleteOrderProduct();
+        break;
     default:
         echo json_encode(['success' => false, 'message' => 'Azione non valida']);
         break;
+}
+
+function getOrdiniPersonali(){
+    global $pdo;
+    try {
+        $id_dipendente = $_SESSION['user_id'];
+
+        $sql = "SELECT o.ID_Ordine as id, o.ID_Cliente as id_cliente, c.Nome_Azienda as cliente, o.Data_Ordine as data_ordine, o.Data_Arrivo as data_arrivo, 
+                       CONCAT(d.Nome, ' ', d.Cognome) as dipendente
+                FROM ordini o
+                LEFT JOIN clienti c ON o.ID_Cliente = c.ID_Cliente
+                LEFT JOIN dipendenti d ON o.ID_Dipendente = d.ID_Dipendente
+                WHERE o.ID_Dipendente = ?
+                ORDER BY o.Data_Ordine DESC";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$id_dipendente]);
+        $ordini = $stmt->fetchAll();
+        echo json_encode(['success' => true, 'data' => $ordini]);
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    }
 }
 
 function getOrdini() {
@@ -110,12 +154,11 @@ function getOrdini() {
     try {
         $id = $_GET['id'] ?? null;
         $where = $id ? "WHERE o.ID_Ordine = ?" : "";
-        $sql = "SELECT o.ID_Ordine as id, o.ID_Cliente as id_cliente, o.ID_Dipendente as id_dipendente, o.ID_prodotto as id_prodotto, c.Nome_Azienda as cliente, p.Nome as prodotto, o.Data_Ordine as data_ordine, o.Data_Arrivo as data_arrivo, 
+        $sql = "SELECT o.ID_Ordine as id, o.ID_Cliente as id_cliente, o.ID_Dipendente as id_dipendente, c.Nome_Azienda as cliente, o.Data_Ordine as data_ordine, o.Data_Arrivo as data_arrivo, 
                        CONCAT(d.Nome, ' ', d.Cognome) as dipendente
                 FROM ordini o
                 LEFT JOIN clienti c ON o.ID_Cliente = c.ID_Cliente
                 LEFT JOIN dipendenti d ON o.ID_Dipendente = d.ID_Dipendente
-                LEFT JOIN prodotti p ON o.ID_prodotto = p.ID_Prodotto
                 $where
                 ORDER BY o.Data_Ordine DESC";
         $stmt = $pdo->prepare($sql);
@@ -132,16 +175,16 @@ function addOrdine() {
     global $pdo;
     try {
         $id_cliente = $_POST['ID_Cliente'];
-        $id_dipendente = $_POST['ID_Dipendente'];
-        $id_prodotto = $_POST['ID_prodotto'];
+        $id_dipendente = $_SESSION['user_id'];
         $data_ordine = $_POST['Data_Ordine'];
         $data_arrivo = $_POST['Data_Arrivo'] ?: null;
 
-        $sql = "INSERT INTO ordini (ID_Cliente, ID_Dipendente, ID_prodotto, Data_Ordine, Data_Arrivo) VALUES (?, ?, ?, ?, ?)";
+        $sql = "INSERT INTO ordini (ID_Cliente, ID_Dipendente, Data_Ordine, Data_Arrivo) VALUES (?, ?, ?, ?)";
         $stmt = $pdo->prepare($sql);
-        $stmt->execute([$id_cliente, $id_dipendente, $id_prodotto, $data_ordine, $data_arrivo]);
+        $stmt->execute([$id_cliente, $id_dipendente, $data_ordine, $data_arrivo]);
 
-        echo json_encode(['success' => true]);
+        $newId = $pdo->lastInsertId();
+        echo json_encode(['success' => true, 'id' => $newId]);
     } catch (Exception $e) {
         echo json_encode(['success' => false, 'message' => $e->getMessage()]);
     }
@@ -152,14 +195,12 @@ function updateOrdine() {
     try {
         $id = $_POST['id'];
         $id_cliente = $_POST['ID_Cliente'];
-        $id_dipendente = $_POST['ID_Dipendente'];
-        $id_prodotto = $_POST['ID_prodotto'];
         $data_ordine = $_POST['Data_Ordine'];
         $data_arrivo = $_POST['Data_Arrivo'] ?: null;
 
-        $sql = "UPDATE ordini SET ID_Cliente = ?, ID_Dipendente = ?, ID_prodotto = ?, Data_Ordine = ?, Data_Arrivo = ? WHERE ID_Ordine = ?";
+        $sql = "UPDATE ordini SET ID_Cliente = ?, Data_Ordine = ?, Data_Arrivo = ? WHERE ID_Ordine = ?";
         $stmt = $pdo->prepare($sql);
-        $stmt->execute([$id_cliente, $id_dipendente, $id_prodotto, $data_ordine, $data_arrivo, $id]);
+        $stmt->execute([$id_cliente, $data_ordine, $data_arrivo, $id]);
 
         echo json_encode(['success' => true]);
     } catch (Exception $e) {
@@ -377,7 +418,7 @@ function getProdotti() {
     try {
         $id = $_GET['id'] ?? null;
         $where = $id ? "WHERE ID_Prodotto = ?" : "";
-        $sql = "SELECT ID_Prodotto as id, Nome as nome, Descrizione as descrizione FROM prodotti $where ORDER BY Nome";
+        $sql = "SELECT ID_Prodotto as id, Nome as nome, Descrizione as descrizione, Prezzo as prezzo FROM prodotti $where ORDER BY Nome";
         $stmt = $pdo->prepare($sql);
         $stmt->execute($id ? [$id] : []);
         $prodotti = $stmt->fetchAll();
@@ -393,10 +434,11 @@ function addProdotto() {
     try {
         $nome = $_POST['Nome'];
         $descrizione = $_POST['Descrizione'] ?? null;
+        $prezzo = floatval($_POST['Prezzo'] ?? 0);
 
-        $sql = "INSERT INTO prodotti (Nome, Descrizione) VALUES (?, ?)";
+        $sql = "INSERT INTO prodotti (Nome, Descrizione, Prezzo) VALUES (?, ?, ?)";
         $stmt = $pdo->prepare($sql);
-        $stmt->execute([$nome, $descrizione]);
+        $stmt->execute([$nome, $descrizione, $prezzo]);
 
         echo json_encode(['success' => true]);
     } catch (Exception $e) {
@@ -410,10 +452,11 @@ function updateProdotto() {
         $id = $_POST['id'];
         $nome = $_POST['Nome'];
         $descrizione = $_POST['Descrizione'] ?? null;
+        $prezzo = floatval($_POST['Prezzo'] ?? 0);
 
-        $sql = "UPDATE prodotti SET Nome = ?, Descrizione = ? WHERE ID_Prodotto = ?";
+        $sql = "UPDATE prodotti SET Nome = ?, Descrizione = ?, Prezzo = ? WHERE ID_Prodotto = ?";
         $stmt = $pdo->prepare($sql);
-        $stmt->execute([$nome, $descrizione, $id]);
+        $stmt->execute([$nome, $descrizione, $prezzo, $id]);
 
         echo json_encode(['success' => true]);
     } catch (Exception $e) {
@@ -616,6 +659,142 @@ function deleteProdottoMagazzino() {
         $stmt = $pdo->prepare($sql);
         $stmt->execute([$id_magazzino, $id_prodotto]);
 
+        echo json_encode(['success' => true]);
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    }
+}
+
+function getWarehousesForProduct() {
+    global $pdo;
+    try {
+        $id_prodotto = $_GET['id_prodotto'] ?? null;
+        
+        if(!$id_prodotto) {
+            echo json_encode(['success' => false, 'message' => 'ID prodotto non specificato']);
+            return;
+        }
+        
+        $sql = "SELECT mp.id_magazzino as id, m.Indirizzo as indirizzo, mp.quantita as quantita
+                FROM magazzini_prodotti mp
+                LEFT JOIN magazzini m ON mp.id_magazzino = m.ID_Magazzino
+                WHERE mp.id_prodotto = ? AND mp.quantita > 0
+                ORDER BY m.Indirizzo";
+        
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$id_prodotto]);
+        $magazzini = $stmt->fetchAll();
+        
+        echo json_encode(['success' => true, 'data' => $magazzini]);
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    }
+}
+
+function getOrderProducts() {
+    global $pdo;
+    try {
+        $id_ordine = $_GET['id_ordine'] ?? null;
+        
+        if(!$id_ordine) {
+            echo json_encode(['success' => false, 'message' => 'ID ordine non specificato']);
+            return;
+        }
+        
+        $sql = "SELECT op.id_prodotto, op.id_magazzino, op.quantita,
+                       p.Nome as nome_prodotto, p.Descrizione as descrizione_prodotto,
+                       m.Indirizzo as indirizzo_magazzino
+                FROM prodotti_ordine op
+                LEFT JOIN prodotti p ON op.id_prodotto = p.ID_Prodotto
+                LEFT JOIN magazzini m ON op.id_magazzino = m.ID_Magazzino
+                WHERE op.id_ordine = ?
+                ORDER BY p.Nome";
+        
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$id_ordine]);
+        $prodotti = $stmt->fetchAll();
+        
+        echo json_encode(['success' => true, 'data' => $prodotti]);
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    }
+}
+
+function addOrderProduct() {
+    global $pdo;
+    try {
+        $id_ordine = $_POST['id_ordine'] ?? null;
+        $id_prodotto = $_POST['id_prodotto'] ?? null;
+        $id_magazzino = $_POST['id_magazzino'] ?? null;
+        $quantita = intval($_POST['quantita'] ?? 0);
+        
+        if(!$id_ordine || !$id_prodotto || !$id_magazzino || $quantita <= 0) {
+            echo json_encode(['success' => false, 'message' => 'Dati non validi']);
+            return;
+        }
+        
+        // Controlla disponibilità nel magazzino
+        $sql = "SELECT quantita FROM magazzini_prodotti WHERE id_magazzino = ? AND id_prodotto = ?";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$id_magazzino, $id_prodotto]);
+        $row = $stmt->fetch();
+        
+        if(!$row || $row['quantita'] < $quantita) {
+            echo json_encode(['success' => false, 'message' => 'Prodotti insufficienti in magazzino']);
+            return;
+        }
+        
+        // Inserisci nella tabella prodotti_ordine
+        $sql = "INSERT INTO prodotti_ordine (id_ordine, id_prodotto, id_magazzino, quantita) VALUES (?, ?, ?, ?)";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$id_ordine, $id_prodotto, $id_magazzino, $quantita]);
+        
+        // Aggiorna magazzini_prodotti decrementando la quantità
+        $sql = "UPDATE magazzini_prodotti SET quantita = quantita - ? WHERE id_magazzino = ? AND id_prodotto = ?";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$quantita, $id_magazzino, $id_prodotto]);
+        
+        echo json_encode(['success' => true]);
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    }
+}
+
+function deleteOrderProduct() {
+    global $pdo;
+    try {
+        $id_ordine = $_POST['id_ordine'] ?? null;
+        $id_prodotto = $_POST['id_prodotto'] ?? null;
+        $id_magazzino = $_POST['id_magazzino'] ?? null;
+        
+        if(!$id_ordine || !$id_prodotto || !$id_magazzino) {
+            echo json_encode(['success' => false, 'message' => 'Dati non validi']);
+            return;
+        }
+        
+        // Ottieni la quantità dal prodotto dell'ordine
+        $sql = "SELECT quantita FROM prodotti_ordine WHERE id_ordine = ? AND id_prodotto = ? AND id_magazzino = ?";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$id_ordine, $id_prodotto, $id_magazzino]);
+        $row = $stmt->fetch();
+        
+        if(!$row) {
+            echo json_encode(['success' => false, 'message' => 'Prodotto non trovato nell\'ordine']);
+            return;
+        }
+        
+        $quantita = $row['quantita'];
+        
+        // Rimuovi da prodotti_ordine
+        $sql = "DELETE FROM prodotti_ordine WHERE id_ordine = ? AND id_prodotto = ? AND id_magazzino = ?";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$id_ordine, $id_prodotto, $id_magazzino]);
+        
+        // Aggiorna magazzini_prodotti incrementando la quantità
+        $sql = "UPDATE magazzini_prodotti SET quantita = quantita + ? WHERE id_magazzino = ? AND id_prodotto = ?";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$quantita, $id_magazzino, $id_prodotto]);
+        
         echo json_encode(['success' => true]);
     } catch (Exception $e) {
         echo json_encode(['success' => false, 'message' => $e->getMessage()]);

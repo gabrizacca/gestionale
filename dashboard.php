@@ -103,12 +103,17 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                             <li class="nav-item active" data-section="dashboard">
                                 <a href="#" onclick="showSection('dashboard')">Dashboard</a>
                             </li>
-                            <li class="nav-item" data-section="ordini">
-                                <a href="#" onclick="showSection('ordini')">Ordini</a>
+                            <li class="nav-item" data-section="meiOrdini">
+                                <a href="#" onclick="showSection('meiOrdini')">I Miei Ordini</a>
                             </li>
                             <li class="nav-item" data-section="prodotti">
                                 <a href="#" onclick="showSection('prodotti')">Prodotti</a>
                             </li>
+                            <?php if (isset($_SESSION['is_admin']) && $_SESSION['is_admin'] == 1): ?> 
+                            <li class="nav-item" data-section="ordini">
+                                <a href="#" onclick="showSection('ordini')">Ordini Totali</a>
+                            </li>
+                            <?php endif; ?>
                             <?php if (isset($_SESSION['is_admin']) && $_SESSION['is_admin'] == 1): ?> 
                             <li class="nav-item" data-section="clienti">
                                 <a href="#" onclick="showSection('clienti')">Clienti</a>
@@ -157,19 +162,49 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                                 </div>
                             </div>
                         </div>
-        
-                        <!-- Ordini -->
+                        <!-- I Miei Ordini -->
+                        <div id="meiOrdiniContent" class="content-section">
+                            <div class="section-header">
+                                <h2>I Miei Ordini</h2>
+                                <button class="btn-primary" onclick="showForm('meiOrdini')">Nuovo Ordine</button>
+                            </div>
+                            <div class="search-bar">
+                                <select id="meiOrdiniSearchField" onchange="searchAndSort('meiOrdini')">
+                                    <option value="">Seleziona campo ricerca</option>
+                                    <option value="cliente">Cliente</option>
+                                </select>
+                                <input type="text" id="meiOrdiniSearchInput" placeholder="Inserisci termine di ricerca..." onkeyup="searchAndSort('meiOrdini')">
+                                <button class="btn-secondary" onclick="sortDescending('meiOrdini')">↓ Ordina Decrescente</button>
+                                <button class="btn-secondary" onclick="clearSearchAndSort('meiOrdini')">✕ Ripristina</button>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>ID Ordine</th>
+                                            <th>Cliente</th>
+                                            <th>Data Ordine</th>
+                                            <th>Data Arrivo</th>
+                                            <th>Azioni</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="meiOrdiniTable">
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div id="meiOrdiniForm" class="form-container" style="display: none;"></div>
+                        </div>
+                        
+                        <!-- Ordini Totali (Solo Admin) -->
                         <div id="ordiniContent" class="content-section">
                             <div class="section-header">
-                                <h2>Gestione Ordini</h2>
+                                <h2>Gestione Ordini (Totali)</h2>
                                 <button class="btn-primary" onclick="showForm('ordini')">Nuovo Ordine</button>
                             </div>
                             <div class="search-bar">
                                 <select id="ordiniSearchField" onchange="searchAndSort('ordini')">
                                     <option value="">Seleziona campo ricerca</option>
                                     <option value="cliente">Cliente</option>
-                                    <option value="prodotto">Prodotto</option>
-                                    <option value="dipendente">Dipendente</option>
                                 </select>
                                 <input type="text" id="ordiniSearchInput" placeholder="Inserisci termine di ricerca..." onkeyup="searchAndSort('ordini')">
                                 <button class="btn-secondary" onclick="sortDescending('ordini')">↓ Ordina Decrescente</button>
@@ -181,7 +216,6 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                                         <tr>
                                             <th>ID Ordine</th>
                                             <th>Cliente</th>
-                                            <th>Prodotto</th>
                                             <th>Data Ordine</th>
                                             <th>Data Arrivo</th>
                                             <th>Dipendente</th>
@@ -217,6 +251,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                                             <th>ID</th>
                                             <th>Nome</th>
                                             <th>Descrizione</th>
+                                            <th>Prezzo</th>
                                             <th>Azioni</th>
                                         </tr>
                                     </thead>
@@ -386,6 +421,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                 // Variabili per memorizzare i dati originali di tutte le sezioni
                 let tableDataCache = {
                     ordini: [],
+                    meiOrdini: [],
                     prodotti: [],
                     clienti: [],
                     magazzini: [],
@@ -396,6 +432,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                 // Variabili per tracciare lo stato di ordinamento
                 let sortState = {
                     ordini: false,
+                    meiOrdini: false,
                     prodotti: false,
                     clienti: false,
                     magazzini: false,
@@ -494,7 +531,8 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                     }
                     
                     sortState[section] = false;
-                }                
+                }  
+
                 // Funzione per cambiare sezione
                 function showSection(section) {
                     document.querySelectorAll('.content-section').forEach(el => el.classList.remove('active'));
@@ -509,7 +547,10 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                 
                 // Funzione per caricare i dati
                 function loadData(section) {
-                    fetch(`api.php?action=get${section.charAt(0).toUpperCase() + section.slice(1)}`)
+                    // Per "meiOrdini" usa getOrdiniPersonali, per gli altri usa il nome della sezione
+                    const action = section === 'meiOrdini' ? 'getOrdiniPersonali' : `get${section.charAt(0).toUpperCase() + section.slice(1)}`;
+                    
+                    fetch(`api.php?action=${action}`)
                         .then(response => response.json())
                         .then(data => {
                             if(data.success) {
@@ -535,17 +576,31 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                     
                     tableBody.innerHTML = '';
                     
-                    if(section === 'ordini') {
+                    if(section === 'meiOrdini') {
                         data.forEach(item => {
                             tableBody.innerHTML += `
                                 <tr>
                                     <td>${item.id}</td>
                                     <td>${item.cliente}</td>
-                                    <td>${item.prodotto || '-'}</td>
+                                    <td>${item.data_ordine}</td>
+                                    <td>${item.data_arrivo || '-'}</td>
+                                    <td>
+                                        <button class="btn-icon" onclick="window.location.href='add_order_products.php?order_id=${item.id}'" title="Aggiungi Prodotti">📦</button>
+                                    </td>
+                                </tr>
+                            `;
+                        });
+                    } else if(section === 'ordini') {
+                        data.forEach(item => {
+                            tableBody.innerHTML += `
+                                <tr>
+                                    <td>${item.id}</td>
+                                    <td>${item.cliente}</td>
                                     <td>${item.data_ordine}</td>
                                     <td>${item.data_arrivo || '-'}</td>
                                     <td>${item.dipendente}</td>
                                     <td>
+                                        <button class="btn-icon" onclick="window.location.href='add_order_products.php?order_id=${item.id}'" title="Aggiungi Prodotti">📦</button>
                                         <button class="btn-icon edit" onclick="editItem('ordini', ${item.id})">✏️</button>
                                         <button class="btn-icon delete" onclick="deleteItem('ordini', ${item.id})">🗑️</button>
                                     </td>
@@ -559,6 +614,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                                     <td>${item.id}</td>
                                     <td>${item.nome}</td>
                                     <td>${item.descrizione}</td>
+                                    <td>${item.prezzo}</td>
                                     <td>
                                         <button class="btn-icon edit" onclick="editItem('prodotti', ${item.id})">✏️</button>
                                         <button class="btn-icon delete" onclick="deleteItem('prodotti', ${item.id})">🗑️</button>
@@ -680,7 +736,9 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                     
                     if(id) {
                         // Carica i dati per la modifica
-                        fetch(`api.php?action=get${section.charAt(0).toUpperCase() + section.slice(1)}&id=${id}`)
+                        // Per meiOrdini, usa getOrdini (non getMeiOrdini)
+                        const actualSection = section === 'meiOrdini' ? 'ordini' : section;
+                        fetch(`api.php?action=get${actualSection.charAt(0).toUpperCase() + actualSection.slice(1)}&id=${id}`)
                             .then(response => response.json())
                             .then(data => {
                                 if(data.success) {
@@ -701,18 +759,15 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                 // Funzione per renderizzare il form
                 function renderForm(section, data, id) {
                     const formContainer = document.getElementById(`${section}Form`);
-                    
-                    if(section === 'ordini') {
+                    if(section === 'ordini' || section === 'meiOrdini') {
                         // Carica clienti, dipendenti e prodotti per i select
                         Promise.all([
                             fetch('api.php?action=getClienti').then(r => r.json()),
                             fetch('api.php?action=getDipendenti').then(r => r.json()),
                             fetch('api.php?action=getProdotti').then(r => r.json())
                         ]).then(([clientiRes, dipendentiRes, prodottiRes]) => {
-                            if(clientiRes.success && dipendentiRes.success && prodottiRes.success) {
+                            if(clientiRes.success && dipendentiRes.success) {
                                 const clientiOptions = clientiRes.data.map(c => `<option value="${c.id}" ${data && data.id_cliente == c.id ? 'selected' : ''}>${c.nome_azienda}</option>`).join('');
-                                const dipendentiOptions = dipendentiRes.data.map(d => `<option value="${d.id}" ${data && data.id_dipendente == d.id ? 'selected' : ''}>${d.nome_completo}</option>`).join('');
-                                const prodottiOptions = prodottiRes.data.map(p => `<option value="${p.id}" ${data && data.id_prodotto == p.id ? 'selected' : ''}>${p.nome} - ${p.descrizione}</option>`).join('');                                
                                 formContainer.innerHTML = `
                                     <h3>${id ? 'Modifica' : 'Nuovo'} Ordine</h3>
                                     <form onsubmit="saveItem(event, '${section}', ${id || 'null'})">
@@ -724,26 +779,12 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                                             </select>
                                         </div>
                                         <div class="form-group">
-                                            <label>Prodotto</label>
-                                            <select name="ID_prodotto" required>
-                                                <option value="">Seleziona Prodotto</option>
-                                                ${prodottiOptions}
-                                            </select>
-                                        </div>
-                                        <div class="form-group">
                                             <label>Data Ordine</label>
                                             <input type="date" name="Data_Ordine" value="${data ? data.data_ordine : ''}" required>
                                         </div>
                                         <div class="form-group">
                                             <label>Data Arrivo</label>
                                             <input type="date" name="Data_Arrivo" value="${data ? data.data_arrivo : ''}">
-                                        </div>
-                                        <div class="form-group">
-                                            <label>Dipendente</label>
-                                            <select name="ID_Dipendente" required>
-                                                <option value="">Seleziona Dipendente</option>
-                                                ${dipendentiOptions}
-                                            </select>
                                         </div>
                                         <div class="form-group">
                                             <button type="submit" class="btn-success">Salva</button>
@@ -763,7 +804,11 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                                 </div>
                                 <div class="form-group">
                                     <label>Descrizione</label>
-                                    <input type="text" name="Desc_prodotto" value="${data ? data.descrizione : ''}" required>
+                                    <input type="text" name="Descrizione" value="${data ? data.descrizione : ''}" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Prezzo</label>
+                                    <input type="text" name="Prezzo" value="${data ? data.prezzo : ''}" required>
                                 </div>
                                 <div class="form-group">
                                     <button type="submit" class="btn-success">Salva</button>
@@ -944,7 +989,9 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                     }
                     
                     const formData = new FormData(form);
-                    formData.append('action', id ? `update${section.charAt(0).toUpperCase() + section.slice(1)}` : `add${section.charAt(0).toUpperCase() + section.slice(1)}`);
+                    // Per meiOrdini, usa sempre addOrdini/updateOrdini (non addMeiOrdini)
+                    const actualSection = section === 'meiOrdini' ? 'ordini' : section;
+                    formData.append('action', id ? `update${actualSection.charAt(0).toUpperCase() + actualSection.slice(1)}` : `add${actualSection.charAt(0).toUpperCase() + actualSection.slice(1)}`);
                     if(id) formData.append('id', id);
                     
                     fetch('api.php', {
@@ -959,10 +1006,16 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                     })
                     .then(data => {
                         if(data.success) {
-                            hideForm(section);
-                            loadData(section);
-                            updateDashboardStats(); // Aggiorna le statistiche della homepage
-                            alert('✓ Elemento salvato con successo!');
+                            // Se è un nuovo ordine, reindirizza a add_order_products.php
+                            if((section === 'ordini' || section === 'meiOrdini') && !id && data.id) {
+                                alert('✓ Ordine creato con successo!');
+                                window.location.href = `add_order_products.php?order_id=${data.id}`;
+                            } else {
+                                hideForm(section);
+                                loadData(section);
+                                updateDashboardStats(); // Aggiorna le statistiche della homepage
+                                alert('✓ Elemento salvato con successo!');
+                            }
                         } else {
                             alert('✗ Errore: ' + (data.message || 'Errore sconosciuto'));
                             if(submitBtn) {

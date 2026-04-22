@@ -287,7 +287,7 @@ $id_magazzino = $_GET['idMagazzino'] ?? null;
                             </div>
                             <div class="form-group">
                                 <label>Quantità</label>
-                                <input type="number" step="0.01" name="Quantita" value="${data ? data.quantita : ''}" required>
+                                <input type="number" step="1" name="Quantita" value="${data ? data.quantita : ''}" required>
                             </div>
                             <div class="form-group">
                                 <button type="submit" class="btn-success">Salva</button>
